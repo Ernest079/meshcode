@@ -1,0 +1,16 @@
+{
+  "name": "meshcode",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Write 3D models as code and turn them into GLB, or turn GLB back into code. Plus a benchmark: files vs hybrid vs pure-code games.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.34.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": ["three.js", "glb", "gltf", "procedural", "3d", "codegen", "benchmark"]
+}

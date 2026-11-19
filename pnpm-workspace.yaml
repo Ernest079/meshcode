@@ -1,0 +1,7 @@
+# Supply-chain hardening. pnpm downloads from the npm registry, so defend at the client.
+# Skip versions published less than 3 days ago (compromised releases are usually pulled within hours).
+minimumReleaseAge: 4320
+# Never run dependency install scripts unless listed here explicitly (package: true).
+allowBuilds: {}
+# Fail the install if a dependency wants to run a build script that is not allowed above.
+strictDepBuilds: true
