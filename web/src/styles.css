@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* Design tokens: every colour/font the app uses. Utilities like bg-panel, text-muted come from here. */
+@theme {
+  --color-brand-400: oklch(0.67 0.17 277);
+  --color-brand-500: oklch(0.51 0.23 277);
+  --color-brand-600: oklch(0.46 0.22 277);
+  --color-surface: oklch(0.97 0.003 265);
+  --color-surface-dark: oklch(0.18 0.01 265);
+  --color-panel: oklch(1 0 0);
+  --color-panel-dark: oklch(0.23 0.012 265);
+  --color-ink: oklch(0.25 0.015 265);
+  --color-ink-dark: oklch(0.93 0.008 265);
+  --color-muted: oklch(0.55 0.015 265);
+  --color-line: oklch(0.9 0.005 265);
+  --color-line-dark: oklch(0.32 0.012 265);
+  --color-danger: oklch(0.55 0.2 25);
+  --font-mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, monospace;
+}
+
+/* Only patterns repeated 3+ times in the markup live here. */
+@layer components {
+  .btn {
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-line bg-panel px-3 py-1.5 text-sm font-medium
+      transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-500
+      disabled:cursor-not-allowed disabled:opacity-50
+      dark:border-line-dark dark:bg-panel-dark dark:hover:bg-surface-dark;
+  }
+  .btn-primary {
+    @apply border-transparent bg-brand-500 text-white hover:bg-brand-600 dark:border-transparent dark:bg-brand-500 dark:hover:bg-brand-600;
+  }
+  .stat {
+    @apply inline-flex gap-1.5 whitespace-nowrap;
+  }
+  .stat-value {
+    @apply text-ink tabular-nums dark:text-ink-dark;
+  }
+}

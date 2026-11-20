@@ -263,3 +263,22 @@ No encontré ningún trabajo que:
 - **[rieseberg2026fable]** Post en X de Felix Rieseberg sobre un shooter 3D hecho con Fable 5.2 "sin ningún GLB, todo con código": https://x.com/felixrieseberg/status/2119925633564463609
 - **No se pudo verificar:** X devuelve HTTP 402 sin sesión iniciada, y no encontré cobertura secundaria.
 - Hay que citarlo como anécdota que motiva la pregunta, no como evidencia. Antes de publicar, toma una captura con la fecha y archívala, por ejemplo en web.archive.org.
+
+---
+
+## 9. Observaciones propias con meshcode (preliminares, no son el benchmark)
+
+Mediciones del 2026-11-20 con meshcode v0.0.0 (three.js 0.187.0, Chrome 158 headless). Son tamaños de archivo, no de rendimiento en runtime, que se medirá en la fase 5.
+
+| Modelo | GLB | Código generado | Texturas | Geometría como | IoU / materiales |
+|---|---|---|---|---|---|
+| `examples/crates.js` (6 cajas instanciadas) | 2,9 KB (meshopt: 4,5 KB) | 0,9 KB | — | primitivas | 1,0000 / idénticos |
+| `examples/torch.js` (caja + cilindro + cono, textura 64×64) | 8,2 KB (meshopt: 7,0 KB) | 1,5 KB | 1 PNG | primitivas | 1,0000 / idénticos |
+| Lantern (Khronos Sample Assets, CC0, 5.394 tris) | 9.564.264 B | 311.210 B | 9.329.347 B (4 PNG, bytes originales) | datos base64 | 1,0000 / idénticos |
+| Avocado (Khronos Sample Assets, CC0, 682 tris) | 8.110.040 B | 33.198 B | 8.084.902 B (3 PNG) | datos base64 | 1,0000 / idénticos |
+
+Lecturas que habrá que confirmar:
+1. **Lo que pesa en un asset de artista son las texturas, no la geometría:** el 97,5% del GLB en Lantern y el 99,7% en Avocado. Pasar la geometría a código no cambia ese tamaño; las texturas siguen siendo archivos, es decir, el modelo híbrido (B).
+2. **Si la geometría coincide con primitivas, el código es mucho más pequeño:** crates pasa de 2,9 KB a 0,9 KB. **Si no coincide**, los datos en código ocupan unas 1,3 veces más que el binario, por la sobrecarga de base64 (Lantern: unos 235 KB de geometría en el GLB contra 311 KB de JS).
+3. **meshopt no siempre reduce el tamaño:** en mallas diminutas (crates) lo que añade la extensión supera lo que comprime.
+4. **El IoU de silueta no detecta errores de sombreado.** Ejemplo: `normalScale.y` invertido por GLTFLoader cuando la malla no tiene tangentes. Por eso la verificación compara también los materiales (`materialDiff`). Conviene mencionarlo como amenaza a la validez de cualquier métrica que solo mida la forma.

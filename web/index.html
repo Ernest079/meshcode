@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>meshcode</title>
+    <meta name="description" content="Write 3D models as code, export GLB, or turn a GLB back into code." />
+    <meta name="theme-color" content="#4f46e5" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icon-192.png" />
+    <script type="module" src="./src/main.js"></script>
+  </head>
+  <body class="h-full bg-surface font-sans text-ink antialiased dark:bg-surface-dark dark:text-ink-dark">
+    <div class="flex h-full flex-col">
+      <header class="flex flex-wrap items-center gap-2 border-b border-line bg-panel px-3 py-2 dark:border-line-dark dark:bg-panel-dark">
+        <h1 class="mr-1 flex items-center gap-2 text-base font-semibold tracking-tight">
+          <img src="./icon.svg" alt="" class="size-6" />
+          meshcode
+        </h1>
+
+        <label class="sr-only" for="examples">Load example</label>
+        <select id="examples" class="btn pr-2">
+          <option value="">Examples…</option>
+          <option value="torch">Torch (primitives + texture)</option>
+          <option value="crates">Crates (instancing)</option>
+        </select>
+
+        <button id="run" type="button" class="btn btn-primary" title="Ctrl+Enter">Run</button>
+        <label class="btn" title="Turn a .glb into code (or drop a file anywhere)">
+          Import GLB
+          <input id="import" type="file" accept=".glb,model/gltf-binary" class="sr-only" />
+        </label>
+        <button id="export" type="button" class="btn">Export GLB</button>
+        <button id="share" type="button" class="btn" title="Copy a link that contains this code">Share</button>
+        <button id="install" type="button" class="btn" hidden>Install app</button>
+
+        <a
+          href="https://github.com/Ernest079/meshcode"
+          class="ml-auto hidden text-sm text-muted underline-offset-4 sm:inline hover:text-ink hover:underline dark:hover:text-ink-dark"
+          >GitHub</a
+        >
+      </header>
+
+      <main class="grid min-h-0 flex-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1">
+        <section id="editor" class="min-h-0 overflow-hidden" aria-label="Model code"></section>
+        <section class="relative min-h-0 border-t border-line md:border-t-0 md:border-l dark:border-line-dark" aria-label="3D preview">
+          <iframe id="viewer" title="3D preview" sandbox="allow-scripts" class="block size-full"></iframe>
+          <div
+            id="error"
+            role="alert"
+            hidden
+            class="absolute inset-x-3 bottom-3 max-h-1/2 overflow-auto rounded-lg bg-danger/95 p-3 font-mono text-xs whitespace-pre-wrap text-white shadow-lg"
+          ></div>
+        </section>
+      </main>
+
+      <footer
+        class="flex flex-wrap gap-x-5 gap-y-1 border-t border-line bg-panel px-3 py-1.5 font-mono text-xs text-muted dark:border-line-dark dark:bg-panel-dark"
+        aria-live="polite"
+      >
+        <span class="stat">meshes <span class="stat-value" data-stat="meshes">–</span></span>
+        <span class="stat">instances <span class="stat-value" data-stat="instances">–</span></span>
+        <span class="stat">triangles <span class="stat-value" data-stat="triangles">–</span></span>
+        <span class="stat">draw calls <span class="stat-value" data-stat="drawCalls">–</span></span>
+        <span class="stat">code <span class="stat-value" data-stat="codeKB">–</span></span>
+        <span class="stat">GLB <span class="stat-value" data-stat="glbKB">–</span></span>
+        <span id="status" class="ml-auto"></span>
+      </footer>
+    </div>
+  </body>
+</html>

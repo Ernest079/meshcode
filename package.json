@@ -10,7 +10,40 @@
     "node": ">=22"
   },
   "scripts": {
+    "meshcode": "node src/cli.mjs",
+    "build:runtime": "vite build -c web/vite.runtime.config.js --logLevel warn",
+    "dev": "pnpm build:runtime && vite -c web/vite.config.js",
+    "build": "pnpm build:runtime && vite build -c web/vite.config.js",
+    "preview": "vite preview -c web/vite.config.js",
     "test": "node --test"
   },
-  "keywords": ["three.js", "glb", "gltf", "procedural", "3d", "codegen", "benchmark"]
+  "keywords": [
+    "three.js",
+    "glb",
+    "gltf",
+    "procedural",
+    "3d",
+    "codegen",
+    "benchmark"
+  ],
+  "dependencies": {
+    "@gltf-transform/core": "4.5.1",
+    "@gltf-transform/extensions": "4.5.1",
+    "@gltf-transform/functions": "4.5.1",
+    "meshoptimizer": "1.3.0",
+    "playwright-core": "1.65.1",
+    "three": "0.187.0"
+  },
+  "bin": {
+    "meshcode": "src/cli.mjs"
+  },
+  "devDependencies": {
+    "@codemirror/lang-javascript": "6.2.5",
+    "@codemirror/theme-one-dark": "6.1.3",
+    "@tailwindcss/vite": "4.3.5",
+    "codemirror": "6.0.2",
+    "gltf-validator": "2.0.0-dev.3.10",
+    "tailwindcss": "4.3.5",
+    "vite": "8.3.8"
+  }
 }
