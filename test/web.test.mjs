@@ -214,3 +214,74 @@ test('AI panel: generate (with a repair), reject, edit with a diff, accept; the 
     await fake.close();
   }
 });
+
+test('pick ↔ code: clicking a mesh selects its block; the cursor block is outlined; edits since the run are mapped', async () => {
+  const p = await context.newPage();
+  const MODEL = `const part = (T, name, x) => {
+  const m = new T.Mesh(new T.BoxGeometry(1, 1, 1), new T.MeshStandardMaterial());
+  m.name = name;
+  m.position.x = x;
+  return m;
+};
+export default (T) => {
+  const g = new T.Group();
+  g.add(part(T, 'left', -1.5));
+  g.add(part(T, 'right', 1.5));
+  const solo = new T.Mesh(new T.SphereGeometry(0.4), new T.MeshStandardMaterial());
+  solo.name = 'solo';
+  solo.position.set(0, 0, 1.2);
+  g.add(solo);
+  return g;
+};
+`;
+  try {
+    await p.goto(server.url);
+    await p.evaluate((code) => {
+      const ed = globalThis.meshcodeEditor;
+      ed.dispatch({ changes: { from: 0, to: ed.state.doc.length, insert: code } });
+    }, MODEL);
+    await p.click('#run');
+    await p.waitForFunction(() => document.querySelector('[data-stat="meshes"]')?.textContent === '3', null, { timeout: 20000 });
+    const viewer = /** @type {import('playwright-core').Frame} */ (p.frames().find((f) => f !== p.mainFrame()));
+    const box = /** @type {{ x: number, y: number }} */ (await p.locator('#viewer').boundingBox());
+    /** Click the screen position of a named object's centre, as a user would. @param {string} name */
+    const clickOn = async (name) => {
+      const [x, y] = await viewer.evaluate((n) => {
+        const v = globalThis.meshcodeViewer, o = v.current().getObjectByName(n);
+        const c = o.getWorldPosition(o.position.clone()).project(v.camera);
+        return [((c.x + 1) / 2) * innerWidth, ((1 - c.y) / 2) * innerHeight];
+      }, name);
+      await p.evaluate(() => { document.querySelector('#status').textContent = ''; });
+      await p.mouse.click(box.x + x, box.y + y);
+      await p.waitForFunction((n) => document.querySelector('#status')?.textContent?.startsWith(`${n} → line`), name); // the reply is async
+    };
+    const selected = () => p.evaluate(() => { const s = globalThis.meshcodeEditor.state; return s.sliceDoc(s.selection.main.from, s.selection.main.to); });
+    const outlined = () => viewer.evaluate(() => globalThis.meshcodeViewer.highlighted());
+
+    await clickOn('right');
+    assert.equal(await selected(), "g.add(part(T, 'right', 1.5));", 'the call that makes this part, not the shared helper line');
+    assert.deepEqual(await outlined(), ['right']);
+    assert.match(await p.locator('#status').textContent() ?? '', /right → line 10/);
+
+    await clickOn('solo');
+    assert.equal(await selected(), "const solo = new T.Mesh(new T.SphereGeometry(0.4), new T.MeshStandardMaterial());\n  solo.name = 'solo';\n  solo.position.set(0, 0, 1.2);");
+
+    // Cursor → viewer: a configuring line outlines its object; the helper's line outlines every part it made.
+    const cursorAt = (/** @type {string} */ text) => p.evaluate((t) => {
+      const ed = globalThis.meshcodeEditor;
+      ed.dispatch({ selection: { anchor: ed.state.doc.toString().indexOf(t) }, userEvent: 'select' });
+    }, text);
+    await cursorAt("solo.position.set");
+    await viewer.waitForFunction(() => globalThis.meshcodeViewer.highlighted().join() === 'solo');
+    await cursorAt('new T.BoxGeometry');
+    await viewer.waitForFunction(() => globalThis.meshcodeViewer.highlighted().join() === 'left,right');
+
+    // Edits since the last good run (this one does not compile) are mapped: picking still lands right.
+    await p.evaluate(() => globalThis.meshcodeEditor.dispatch({ changes: { from: 0, insert: '@@ not code\n\n' } }));
+    await p.locator('#error').waitFor({ state: 'visible', timeout: 20000 });
+    await clickOn('left');
+    assert.equal(await selected(), "g.add(part(T, 'left', -1.5));");
+  } finally {
+    await p.close();
+  }
+});

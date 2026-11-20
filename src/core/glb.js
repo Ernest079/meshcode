@@ -11,11 +11,12 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 /**
  * Run a model factory (`export default (THREE) => Object3D`).
  * @param {ModelFactory} factory
+ * @param {typeof THREE} [three] the namespace handed to the model (the web viewer passes one that records origins)
  * @returns {Promise<THREE.Object3D>}
  */
-export async function runModel(factory) {
+export async function runModel(factory, three = THREE) {
   if (typeof factory !== 'function') throw new TypeError('model module must `export default (THREE) => Object3D`');
-  const root = await factory(THREE);
+  const root = await factory(three);
   if (!(root instanceof THREE.Object3D)) throw new TypeError('model factory must return a THREE.Object3D');
   root.updateMatrixWorld(true);
   return root;
@@ -23,12 +24,12 @@ export async function runModel(factory) {
 
 /**
  * Run model source text (a module with `export default (THREE) => Object3D`), imported from a blob URL.
- * @param {string} code
+ * @param {string} code @param {typeof THREE} [three]
  */
-export async function runSource(code) {
+export async function runSource(code, three = THREE) {
   const url = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
   try {
-    return await runModel((await import(/* @vite-ignore */ url)).default);
+    return await runModel((await import(/* @vite-ignore */ url)).default, three);
   } catch (err) {
     const e = /** @type {Error} */ (err);
     if (/resolve module specifier/i.test(e.message)) e.message += ' — imports are not available here: use the THREE argument';

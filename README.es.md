@@ -10,7 +10,7 @@ Escribe modelos 3D como código y conviértelos en GLB, o convierte un GLB de vu
 
 meshcode incluye además un benchmark abierto que responde una pregunta: **¿es más eficiente distribuir los assets de un juego como archivos (GLB/PNG), como código o como un híbrido de ambos?** Los agentes de IA construyen cada vez más juegos sin ningún archivo de assets: cada malla, textura y efecto es código. Este proyecto mide cuánto cuesta eso en tiempo de ejecución.
 
-> Estado: **trabajo temprano en curso** (fase 3.10). La app web (3D + 2D), la exportación a motores (Godot, Unity), la IA opcional y la CLI ya funcionan; lo siguiente es el juego de prueba.
+> Estado: **trabajo temprano en curso** (fase 3.11). La app web (3D + 2D), la exportación a motores (Godot, Unity), la IA opcional y la CLI ya funcionan; lo siguiente es el juego de prueba.
 
 ## Planeado
 
@@ -33,6 +33,7 @@ meshcode incluye además un benchmark abierto que responde una pregunta: **¿es 
 - [x] 3.8. Exportar a motores: Godot (GDScript), Unity (C#, experimental); Unreal vía GLB
 - [x] 3.9. IA opcional: modelos locales o tu propia API key (generar, reparar, refinar importaciones)
 - [x] 3.10. GIF de demostración en el README
+- [x] 3.11. Modelo ↔ código: clic en una pieza para seleccionar su código, cursor para resaltar piezas
 - [ ] 4. Juego de prueba en tres variantes (estudio controlado + estudio con assets reales)
 - [ ] 5. Arnés de medición (escritorio + Android)
 - [ ] 6. Análisis, gráficos, release + DOI
@@ -42,6 +43,8 @@ meshcode incluye además un benchmark abierto que responde una pregunta: **¿es 
 **https://ernest079.github.io/meshcode/** (cuando GitHub Pages esté activado en el repo)
 
 Escribe un modelo a la izquierda y míralo en vivo a la derecha. **Export GLB** descarga el modelo, **Import GLB** (o soltar un `.glb` en cualquier parte) lo convierte en código y **Share** genera un enlace que contiene el código. El pie compara el tamaño del código con el del GLB exportado. Se instala como app de escritorio (PWA): funciona sin conexión y abre archivos `.glb`.
+
+**Modelo ↔ código.** Haz clic en una pieza del visor: se selecciona el código que la creó (la llamada `part('wing', …)`, no el helper por el que pasa) y la pieza se marca con un contorno. Mueve el cursor en el editor: se marcan las piezas que crea ese bloque. Funciona también con GLB importados y justo después de editar, antes de volver a ejecutar. Una `InstancedMesh` selecciona su propio bloque (con el número de instancia en la barra de estado); las piezas creadas en un mismo bucle comparten línea.
 
 Tu código se ejecuta en un iframe aislado (origen opaco), así que un enlace compartido no puede leer el almacenamiento del sitio ni tocar la página. Dentro del sandbox usa el argumento `THREE`; ahí no están disponibles los `import`.
 

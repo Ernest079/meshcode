@@ -16,6 +16,7 @@ import forestCode from '../../examples/forest.js?raw';
 import spaceshipCode from '../../examples/spaceship.js?raw';
 import torchCode from '../../examples/torch.js?raw';
 import { detectKind } from '../../src/core/image.js';
+import { setupPick } from './pick.js';
 
 /** @typedef {'3d' | '2d'} Mode */
 /** @type {Record<string, { mode: Mode, code: string }>} */
@@ -71,6 +72,9 @@ const isDark = () => themePref === 'dark' || (themePref === 'system' && systemDa
 
 // ------------------------------------------------------------------ editor
 
+// Viewer ↔ code: clicking a mesh selects its code; the cursor's block is outlined in the viewer.
+const pick = setupPick({ post: (msg) => post(msg), status, active: () => mode === '3d' });
+
 let runTimer = 0;
 let language = 'js';
 let aiBusy = false; // the AI is streaming code into the editor: no live runs, no draft saves
@@ -81,6 +85,7 @@ const editor = new EditorView({
     editorLanguage.of(javascript()),
     editorTheme.of([]), // set by applyTheme()
     editorReview.of([]),
+    pick.extension,
     EditorView.theme({ '&': { height: '100%' }, '.cm-scroller': { overflow: 'auto' } }),
     EditorView.updateListener.of((u) => {
       if (!u.docChanged || aiBusy) return;
@@ -149,7 +154,10 @@ let ready = false;
 let note = ''; // shown once the next run finishes (e.g. the import summary)
 
 /** @param {Record<string, unknown>} msg @param {Transferable[]} [transfer] */
-const post = (msg, transfer = []) => viewer.contentWindow?.postMessage(msg, '*', transfer);
+const post = (msg, transfer = []) => {
+  if (msg.type === 'run') pick.posted(editor.state.doc.length); // runs always carry the editor's code
+  viewer.contentWindow?.postMessage(msg, '*', transfer);
+};
 
 /** Post a message and wait for the frame's reply with the same id (used by the AI loops). */
 let nextId = 1;
@@ -207,6 +215,7 @@ window.addEventListener('message', async (event) => {
       run();
       break;
     case 'ok':
+      if (mode === '3d') pick.shown();
       showError(null);
       status.textContent = note;
       note = '';
@@ -214,6 +223,9 @@ window.addEventListener('message', async (event) => {
     case 'error':
       showError(String(msg.message));
       status.textContent = 'error';
+      break;
+    case 'picked':
+      pick.picked(editor, msg);
       break;
     case 'stats':
       for (const key of ['meshes', 'instances', 'triangles']) $(`[data-stat="${key}"]`).textContent = Number(msg.stats[key]).toLocaleString('en');

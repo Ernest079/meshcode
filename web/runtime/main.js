@@ -25,9 +25,38 @@ scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnviron
 const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 1000);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
+const selection = new THREE.Group(); // outlines of picked / highlighted objects
+scene.add(selection);
 const grid = new THREE.GridHelper(10, 20, 0x888888, 0x888888);
 for (const m of [grid.material].flat()) Object.assign(m, { transparent: true, opacity: 0.35 }); // soft in both themes
 scene.add(grid);
+
+// ------------------------------------------------------------------ origins: which code created each object
+// User code gets a THREE whose drawable classes record, at construction, where in that code they were
+// created (stack frames → offsets, innermost first). Kept in a WeakMap: nothing leaks into exports.
+Error.stackTraceLimit = 50;
+const SELF = import.meta.url; // this runtime's own blob URL: its frames (three.js included) are skipped
+/** @type {WeakMap<THREE.Object3D, number[]>} */
+const origins = new WeakMap();
+let lineStarts = [0]; // of the code being run
+/** @param {any} Base */
+const traced = (Base) => class extends Base {
+  static [Symbol.hasInstance](/** @type {unknown} */ o) { return o instanceof Base; } // `x instanceof THREE.Mesh` keeps working
+  constructor(/** @type {any[]} */ ...args) {
+    super(...args);
+    /** @type {number[]} */ const at = [];
+    for (const line of (new Error().stack ?? '').split('\n')) {
+      const m = /(blob:\S+?):(\d+):(\d+)\)?$/.exec(line);
+      if (m && m[1] !== SELF) at.push((lineStarts[Number(m[2]) - 1] ?? 0) + Number(m[3]) - 1);
+    }
+    if (at.length) origins.set(this, at);
+  }
+};
+const TRACED = /** @type {typeof THREE} */ ({
+  ...THREE,
+  ...Object.fromEntries(['Mesh', 'InstancedMesh', 'SkinnedMesh', 'Points', 'Line', 'LineSegments', 'LineLoop', 'Sprite']
+    .map((k) => [k, traced(/** @type {any} */ (THREE)[k])])),
+});
 
 /** @type {THREE.Object3D | null} */
 let current = null;
@@ -92,6 +121,7 @@ function setMode(next) {
   renderer.domElement.style.display = mode === '3d' ? 'block' : 'none';
   view2d.style.display = mode === '2d' ? 'block' : 'none';
   renderer.setAnimationLoop(mode === '3d' ? loop : null);
+  highlight([]);
   if (mode === '3d') clearInterval(timer);
 }
 
@@ -119,7 +149,64 @@ function frame(root) {
   controls.target.copy(center);
   grid.position.set(center.x, box.min.y, center.z);
   grid.scale.setScalar(Math.max(radius / 2, 0.01));
+  raycaster.params.Line.threshold = raycaster.params.Points.threshold = radius * 0.01;
 }
+
+// ------------------------------------------------------------------ pick ↔ code
+
+const raycaster = new THREE.Raycaster();
+/** @type {THREE.Object3D[]} */
+let highlighted = [];
+
+/** Outline objects (one instance of an InstancedMesh if `instance` is given). @param {THREE.Object3D[]} objects @param {number} [instance] */
+function highlight(objects, instance) {
+  for (const h of /** @type {THREE.Box3Helper[]} */ (selection.children)) {
+    h.geometry.dispose();
+    /** @type {THREE.Material} */ (h.material).dispose();
+  }
+  selection.clear();
+  highlighted = objects;
+  for (const o of objects) {
+    const box = new THREE.Box3();
+    const inst = /** @type {THREE.InstancedMesh} */ (o);
+    if (instance !== undefined && inst.isInstancedMesh) {
+      if (!inst.geometry.boundingBox) inst.geometry.computeBoundingBox();
+      box.copy(/** @type {THREE.Box3} */ (inst.geometry.boundingBox)).applyMatrix4(inst.getMatrixAt(instance, new THREE.Matrix4())).applyMatrix4(inst.matrixWorld);
+    } else {
+      box.setFromObject(o);
+    }
+    const helper = new THREE.Box3Helper(box, 0xfacc15);
+    /** @type {THREE.LineBasicMaterial} */ (helper.material).depthTest = false; // visible through other parts
+    helper.renderOrder = 1;
+    selection.add(helper);
+  }
+}
+
+/** The frame that best tells this object apart: the one fewest other objects share, innermost on ties
+ * (the `part('wing')` call, or the call inside a loop, rather than the `new THREE.Mesh` in the helper).
+ * @param {THREE.Object3D} obj */
+function bestOrigin(obj) {
+  /** @type {Map<number, number>} */ const counts = new Map();
+  current?.traverse((o) => { for (const at of origins.get(o) ?? []) counts.set(at, (counts.get(at) ?? 0) + 1); });
+  const frames = /** @type {number[]} */ (origins.get(obj));
+  return frames.reduce((best, at) => (/** @type {number} */ (counts.get(at)) < /** @type {number} */ (counts.get(best)) ? at : best));
+}
+
+// A click (not an orbit drag) picks the nearest object created by the user's code.
+/** @type {number[] | null} */ let downAt = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { downAt = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!downAt || !current || e.button !== 0 || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 4) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  raycaster.setFromCamera(new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1), camera);
+  const hit = raycaster.intersectObject(current, true).find((h) => origins.has(h.object));
+  if (!hit) {
+    highlight([]);
+    return send({ type: 'picked', at: null });
+  }
+  highlight([hit.object], hit.instanceId);
+  send({ type: 'picked', at: bestOrigin(hit.object), name: hit.object.name, instance: hit.instanceId ?? null });
+});
 
 /** @param {THREE.Object3D} root */
 function show(root) {
@@ -132,6 +219,7 @@ function show(root) {
     });
   }
   current = root;
+  highlight([]);
   scene.add(root);
   frame(root);
   pendingStats = true;
@@ -171,7 +259,8 @@ async function run2d(code, id) {
 /** @param {string} code @param {number} [id] */
 async function run(code, id) {
   try {
-    const root = await runSource(code);
+    lineStarts = [0, ...[...code.matchAll(/\n/g)].map((m) => /** @type {number} */ (m.index) + 1)];
+    const root = await runSource(code, TRACED);
     show(root);
     send({ type: 'ok', id, empty: sceneStats(root).triangles === 0 });
   } catch (err) {
@@ -187,6 +276,10 @@ addEventListener('message', async (event) => {
     if (msg.type === 'run') {
       setMode(msg.mode);
       await (msg.mode === '2d' ? run2d(msg.code, msg.id) : run(msg.code, msg.id));
+    } else if (msg.type === 'highlight') { // cursor in the editor: outline what that block of code creates
+      /** @type {THREE.Object3D[]} */ const found = [];
+      current?.traverse((o) => { if (origins.get(o)?.some((at) => at >= msg.from && at <= msg.to)) found.push(o); });
+      highlight(found);
     } else if (msg.type === 'theme') {
       dark = msg.dark;
       scene.background = new THREE.Color(dark ? 0x111318 : 0xf2f3f5);
@@ -226,5 +319,8 @@ addEventListener('message', async (event) => {
     send({ type: 'error', id: msg.id, message: msg.id ? `${e.name}: ${e.message}` : e.message });
   }
 });
+
+// Handle for devtools and the end-to-end test.
+Object.assign(globalThis, { meshcodeViewer: { camera, current: () => current, highlighted: () => highlighted.map((o) => o.name) } });
 
 send({ type: 'ready' });

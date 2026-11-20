@@ -10,7 +10,7 @@ Write 3D models as code and turn them into GLB, or turn a GLB back into code.
 
 meshcode also ships an open benchmark that answers one question: **is it more efficient to ship game assets as files (GLB/PNG), as code, or as a hybrid of both?** AI coding agents increasingly build games with no asset files at all — every mesh, texture and effect is code. This project measures what that costs at runtime.
 
-> Status: **early work in progress** (phase 3.10). Web app (3D + 2D), engine export (Godot, Unity), optional AI and CLI work; the benchmark game is next.
+> Status: **early work in progress** (phase 3.11). Web app (3D + 2D), engine export (Godot, Unity), optional AI and CLI work; the benchmark game is next.
 
 ## Planned
 
@@ -33,6 +33,7 @@ meshcode also ships an open benchmark that answers one question: **is it more ef
 - [x] 3.8. Export to engines: Godot (GDScript), Unity (C#, experimental); Unreal via GLB
 - [x] 3.9. Optional AI: local models or your own API key (generate, repair, refine imports)
 - [x] 3.10. README demo GIF
+- [x] 3.11. Model ↔ code: click a part to select its code, cursor to outline parts
 - [ ] 4. Benchmark game in three variants (controlled + real-asset studies)
 - [ ] 5. Measurement harness (desktop + Android)
 - [ ] 6. Analysis, charts, release + DOI
@@ -42,6 +43,8 @@ meshcode also ships an open benchmark that answers one question: **is it more ef
 **https://ernest079.github.io/meshcode/** (once GitHub Pages is enabled for the repo)
 
 Write a model on the left, see it live on the right. **Export GLB**, **Import GLB** (or drop a `.glb` anywhere) to get its code, **Share** a link that contains the code. The footer compares the size of the code with the size of the exported GLB. Installable as a desktop app (PWA): works offline and opens `.glb` files.
+
+**Model ↔ code.** Click a part in the viewer: the code that created it is selected (the `part('wing', …)` call, not the helper it goes through) and the part is outlined. Move the cursor in the editor: the parts that block creates are outlined. It also works for imported GLBs, and right after edits that have not run yet. An `InstancedMesh` selects its own block (with the instance number in the status bar); parts made in one loop share a line.
 
 Your code runs in a sandboxed iframe (opaque origin), so a shared link cannot read this site's storage or touch the page. Inside the sandbox, use the `THREE` argument; `import` statements are not available there.
 
