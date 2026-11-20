@@ -6,7 +6,7 @@ Write 3D models as code and turn them into GLB, or turn a GLB back into code.
 
 meshcode also ships an open benchmark that answers one question: **is it more efficient to ship game assets as files (GLB/PNG), as code, or as a hybrid of both?** AI coding agents increasingly build games with no asset files at all — every mesh, texture and effect is code. This project measures what that costs at runtime.
 
-> Status: **early work in progress** (phase 3.5 of 8). Web app and CLI (`build`, `decompile`, `verify`, `inspect`) work; the benchmark is next.
+> Status: **early work in progress** (phase 3.8). Web app (3D + 2D), engine export (Godot, Unity) and CLI work; optional AI is next.
 
 ## Planned
 
@@ -24,6 +24,11 @@ meshcode also ships an open benchmark that answers one question: **is it more ef
 - [x] 2. `meshcode build` (code → GLB)
 - [x] 3. `meshcode decompile` (GLB → code) + silhouette-IoU fidelity metric (`--llm` refinement pending)
 - [x] 3.5. Web app + PWA (GitHub Pages)
+- [x] 3.6. Light/dark theme + detailed examples
+- [x] 3.7. 2D mode: images from code (Canvas, SVG, HTML/CSS → PNG/JPG/WebP)
+- [x] 3.8. Export to engines: Godot (GDScript), Unity (C#, experimental); Unreal via GLB
+- [ ] 3.9. Optional AI: local models or your own API key (generate, repair, refine imports)
+- [ ] 3.10. README demo GIF
 - [ ] 4. Benchmark game in three variants (controlled + real-asset studies)
 - [ ] 5. Measurement harness (desktop + Android)
 - [ ] 6. Analysis, charts, release + DOI
@@ -41,6 +46,61 @@ pnpm dev       # http://localhost:5173
 pnpm build     # → dist/
 ```
 
+### 2D mode: images from code
+
+Switch to **2D** to turn code into **PNG / JPG / WebP** (and keep SVG as SVG). Three kinds of source, detected automatically:
+
+| Source | Contract |
+|---|---|
+| Canvas (JS) | `export default (ctx, { width, height, frame, frames }) => { … }` plus optional `export const size = [w, h]`, `frames = N` (sprite sheet), `columns`, `fps` |
+| SVG | plain SVG markup (size from `width`/`height` or `viewBox`) |
+| HTML + CSS | markup with a `<style>` block; size from a comment like `<!-- size: 512x256 -->`. Rendered through SVG `foreignObject`: use system fonts and inline (`data:`) images. Works in Chromium/Firefox, not Safari. |
+
+Multi-frame canvas modules become a **sprite sheet** (frames left→right, then down), and the preview plays them; click the preview to see the whole sheet.
+
+## Examples
+
+Original models in [`examples/`](examples/), each showing a technique (all load from the web app's **Examples** menu):
+
+| Example | Techniques |
+|---|---|
+| `torch.js` | LatheGeometry profiles, torus rings, canvas textures, unlit layered flame, PointLight, instanced embers |
+| `chest.js` | half-cylinder lid on a hinge pivot (ready to animate), torus arcs, 90-coin InstancedMesh pile |
+| `barrel.js` | one profile function drives the lathed body *and* the hoops, wrapping stave texture |
+| `forest.js` | seeded PRNG (change `SEED`), rejection sampling, displaced ground, 265 instances in 5 draw calls |
+| `spaceship.js` | lathed fuselage, wings extruded from a 2D `Shape`, unlit engine glow (forward = −Z) |
+| `dungeon-kit.js` | modular pieces on a 2 m grid, arched doorway from a `Shape` with a hole, metre-scaled UVs |
+
+Every example is checked in CI: valid GLB (Khronos validator), and `decompile` rebuilds it with silhouette IoU 1.0 and identical materials.
+
+2D examples in [`examples/2d/`](examples/2d/):
+
+| Example | Techniques |
+|---|---|
+| `adventurer-walk.js` | pixel art at 16×16, outline from the alpha channel, ×4 nearest-neighbour scale, 8-frame walk cycle sheet |
+| `cobblestone-texture.js` | seamless Voronoi stones (distances wrap around the edges), mortar, grain |
+| `parallax-layers.js` | 3 layers (sky, mountains, hills) as frames; periodic ridges so every layer scrolls seamlessly |
+| `item-icons.svg` | three icons sharing SVG gradients |
+| `ui-kit.html` | buttons and health/mana bars with CSS gradients and shadows only |
+
+## Game engines
+
+Export the **resulting scene** of a model as engine-native code. This is not a JavaScript translator: the model runs first, so loops, randomness and canvas textures are already resolved. In the web app: **Export → Godot .gd / Unity .cs**. From the CLI:
+
+```sh
+pnpm meshcode export examples/chest.js --to godot          # → chest.gd
+pnpm meshcode export examples/chest.js --to unity          # → ChestModel.cs
+pnpm meshcode export model.glb --to godot -o Model.gd      # .glb input works too
+```
+
+| Engine | Output | How to use | Status |
+|---|---|---|---|
+| **Godot 4** | GDScript (`@tool extends Node3D`) | attach to a `Node3D`; the model is built under a child named `Model`, also live in the editor | **verified**: every example runs in headless Godot 4.6.3 with the same meshes, instances and world AABBs as three.js |
+| **Unity** | C# `MonoBehaviour` | add to an empty GameObject; built in `Awake()`; Built-in and URP | experimental (not compiled in CI); Z mirrored to left-handed, winding checked by tests |
+| **Unreal 5** | — | export **GLB** and import it (Interchange glTF importer, native since UE 5.1) | via GLB |
+
+Godot keeps primitives editable (`BoxMesh`, `CylinderMesh`, `SphereMesh`, `PlaneMesh`) when the mesh has no texture; everything else is exact vertex data in an `ArrayMesh`, and `InstancedMesh` becomes a `MultiMesh`. Light intensities use different units in each engine: tune them after import.
+
 ## CLI
 
 ```sh
@@ -49,6 +109,8 @@ pnpm meshcode build examples/torch.js --meshopt      # + dedup and EXT_meshopt_c
 pnpm meshcode inspect torch.glb                      # meshes, instances, triangles, bbox
 pnpm meshcode decompile torch.glb -o torch.js        # GLB → code (+ texture files), then checks fidelity
 pnpm meshcode verify a.glb b.js --min 0.99           # silhouette IoU + material diff of any two models
+pnpm meshcode build examples/2d/adventurer-walk.js -o walk.png   # 2D: output extension picks PNG / JPG / WebP
+pnpm meshcode build examples/2d/item-icons.svg                    # SVG or HTML in → PNG out
 ```
 
 `decompile` turns geometry that exactly matches a three.js primitive (box, plane, sphere, cylinder, cone) into a constructor call, and keeps anything else losslessly as base64 vertex data. Textures are written next to the module with their original bytes. Every decompile rebuilds the result and reports **silhouette IoU** (6 orthographic views, CPU-rasterized, deterministic) and a **material diff**, because IoU alone is blind to shading.
@@ -61,7 +123,7 @@ export default (THREE) => new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THR
 
 It runs in headless Google Chrome (set `MESHCODE_CHROME` to use another Chromium binary), so canvas textures, `InstancedMesh` and every three.js API behave as in the browser. See [`examples/`](examples/).
 
-> Note: meshopt is not always smaller. On tiny meshes the extension overhead can exceed the savings (`examples/crates.js`: 2.9 KB raw → 4.5 KB meshopt).
+> Note: meshopt is not always smaller. On tiny meshes the extension overhead can exceed the savings (`test/fixtures/instanced.js`: 2.9 KB raw → 4.5 KB meshopt).
 
 ## Development
 

@@ -272,8 +272,8 @@ Mediciones del 2026-11-20 con meshcode v0.0.0 (three.js 0.187.0, Chrome 158 head
 
 | Modelo | GLB | Código generado | Texturas | Geometría como | IoU / materiales |
 |---|---|---|---|---|---|
-| `examples/crates.js` (6 cajas instanciadas) | 2,9 KB (meshopt: 4,5 KB) | 0,9 KB | — | primitivas | 1,0000 / idénticos |
-| `examples/torch.js` (caja + cilindro + cono, textura 64×64) | 8,2 KB (meshopt: 7,0 KB) | 1,5 KB | 1 PNG | primitivas | 1,0000 / idénticos |
+| `test/fixtures/instanced.js` (6 cajas instanciadas; antes `examples/crates.js`) | 2,9 KB (meshopt: 4,5 KB) | 0,9 KB | — | primitivas | 1,0000 / idénticos |
+| `test/fixtures/primitives.js` (caja + cilindro + cono, textura 64×64; antes `examples/torch.js`) | 8,2 KB (meshopt: 7,0 KB) | 1,5 KB | 1 PNG | primitivas | 1,0000 / idénticos |
 | Lantern (Khronos Sample Assets, CC0, 5.394 tris) | 9.564.264 B | 311.210 B | 9.329.347 B (4 PNG, bytes originales) | datos base64 | 1,0000 / idénticos |
 | Avocado (Khronos Sample Assets, CC0, 682 tris) | 8.110.040 B | 33.198 B | 8.084.902 B (3 PNG) | datos base64 | 1,0000 / idénticos |
 
@@ -282,3 +282,18 @@ Lecturas que habrá que confirmar:
 2. **Si la geometría coincide con primitivas, el código es mucho más pequeño:** crates pasa de 2,9 KB a 0,9 KB. **Si no coincide**, los datos en código ocupan unas 1,3 veces más que el binario, por la sobrecarga de base64 (Lantern: unos 235 KB de geometría en el GLB contra 311 KB de JS).
 3. **meshopt no siempre reduce el tamaño:** en mallas diminutas (crates) lo que añade la extensión supera lo que comprime.
 4. **El IoU de silueta no detecta errores de sombreado.** Ejemplo: `normalScale.y` invertido por GLTFLoader cuando la malla no tiene tangentes. Por eso la verificación compara también los materiales (`materialDiff`). Conviene mencionarlo como amenaza a la validez de cualquier métrica que solo mida la forma.
+
+### 9.1 Ejemplos 2D: código frente a PNG (2026-11-20, mismas versiones)
+
+| Ejemplo | Fuente (código) | PNG generado | Relación PNG/código | Nota |
+|---|---|---|---|---|
+| `adventurer-walk.js` (pixel art, 8 frames, 512×64) | 3,1 KB | 2,7 KB | 0,9× | El pixel art con pocos colores comprime tan bien que el PNG pesa **menos** que el código. |
+| `cobblestone-texture.js` (256×256, ruido Voronoi) | 2,1 KB | 127,2 KB | ~60× | Las texturas ruidosas son el caso más favorable al código. |
+| `parallax-layers.js` (3 capas de 512×192) | 3,0 KB | 61,4 KB | ~20× | Degradados y crestas: el código describe en pocas líneas lo que ocupa muchos píxeles. |
+| `item-icons.svg` (384×128) | 2,8 KB | 26,7 KB | ~10× | El vector sigue escalando sin pérdida; el PNG queda fijo a una resolución. |
+| `ui-kit.html` (512×256) | 2,3 KB | 24,3 KB | ~11× | Solo CSS. |
+
+Lectura a confirmar en la fase 5:
+- El tamaño favorece al código **excepto en el pixel art**.
+- Generar en runtime cuesta CPU, por ejemplo el Voronoi recorre cada píxel contra cada piedra.
+- Es la misma tensión entre bytes y construcción que en 3D (§2.1–2.2).

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Dark mode follows the .dark class on <html> (set from the theme picker), not only the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Design tokens: every colour/font the app uses. Utilities like bg-panel, text-muted come from here. */
 @theme {
   --color-brand-400: oklch(0.67 0.17 277);

@@ -171,4 +171,51 @@ export async function decompileFile(glbPath, outPath) {
   return { code: r.code, textureFiles: r.textures.map((t) => t.file), summary: r.summary, warnings: r.warnings, fidelity: await verifyFiles(glbPath, outPath) };
 }
 
+/**
+ * Render 2D source (canvas module, SVG or HTML) in Chrome and encode it.
+ * @param {string} input source file @param {'image/png' | 'image/jpeg' | 'image/webp'} type @param {number} [quality]
+ */
+export async function buildImageFile(input, type, quality = 0.92) {
+  const code = await readFile(input, 'utf8');
+  const r = await withPage({}, (page) => page.evaluate(async ({ code, type, quality }) => {
+    const img = await import('/meshcode/core/image.js');
+    const out = await img.renderImage(code);
+    return {
+      b64: globalThis.__toB64(await img.encodeImage(out.canvas, type, quality)),
+      meta: { kind: out.kind, width: out.width, height: out.height, frames: out.frames, columns: out.columns,
+        sheetWidth: out.canvas.width, sheetHeight: out.canvas.height, coverage: img.coverage(out.canvas) },
+    };
+  }, { code, type, quality }));
+  return { bytes: Buffer.from(r.b64, 'base64'), meta: r.meta };
+}
+
+/**
+ * Export a model (.js module or .glb) as engine-native source.
+ * Also returns each mesh's world AABB in three.js, in scene order, to validate the result in the engine.
+ * @param {string} input @param {'godot' | 'unity'} engine
+ */
+export async function exportEngineFile(input, engine) {
+  const abs = path.resolve(input);
+  await access(abs);
+  return withPage({ model: path.dirname(abs) }, (page) => page.evaluate(async ({ file, engine }) => {
+    const THREE = await import('three');
+    const core = await import('/meshcode/core/glb.js');
+    const engines = await import('/meshcode/core/engines.js');
+    const root = await core.loadModelURL(`/model/${encodeURIComponent(file)}`);
+    const out = (engine === 'godot' ? engines.toGodot : engines.toUnity)(root, { source: file });
+    /** @type {{ name: string, min: number[], max: number[] }[]} */
+    const boxes = [];
+    root.traverse((o) => {
+      const m = /** @type {any} */ (o);
+      if (!m.isMesh) return;
+      if (m.isInstancedMesh) m.computeBoundingBox();
+      else m.geometry.computeBoundingBox();
+      const box = (m.isInstancedMesh ? m.boundingBox : m.geometry.boundingBox).clone().applyMatrix4(m.matrixWorld);
+      const g = m.geometry;
+      boxes.push({ name: m.name, min: box.min.toArray(), max: box.max.toArray(), triangles: (g.index ? g.index.count : g.attributes.position.count) / 3 });
+    });
+    return { ...out, boxes };
+  }, { file: path.basename(abs), engine }));
+}
+
 /** @typedef {{ meshes: number, instances: number, triangles: number, min: number[], max: number[] }} Stats */

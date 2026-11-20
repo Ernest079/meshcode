@@ -14,7 +14,7 @@ const args = (/** @type {number[]} */ a) => a.map(num).join(', ');
 const hex = (/** @type {THREE.Color} */ c) => `0x${c.getHexString()}`;
 
 /** Bytes → base64 without blowing the call stack on big buffers. @param {ArrayBufferView} view */
-function base64(view) {
+export function base64(view) {
   const bytes = new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
   let s = '';
   for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
@@ -37,6 +37,13 @@ function sameGeometry(geo, cand, tol) {
   if (geo.index && cand.index) {
     for (let i = 0; i < geo.index.count; i++) if (geo.index.getX(i) !== cand.index.getX(i)) return false;
   }
+  // Same shape is not enough: custom UVs (texture scale) or edited normals must survive too.
+  for (const name of ['uv', 'normal']) {
+    const x = geo.attributes[name], y = cand.attributes[name];
+    if (!x) continue;
+    if (!y || x.count !== y.count || x.itemSize !== y.itemSize) return false;
+    for (let i = 0; i < x.count; i++) for (let c = 0; c < x.itemSize; c++) if (Math.abs(x.getComponent(i, c) - y.getComponent(i, c)) > 1e-4) return false;
+  }
   return true;
 }
 
@@ -44,7 +51,7 @@ function sameGeometry(geo, cand, tol) {
  * Try box, plane, cylinder/cone and sphere with parameters inferred from the vertices.
  * Only default theta/phi ranges are recognized; anything else falls back to data.
  * @param {THREE.BufferGeometry} geo
- * @returns {{ kind: string, code: string } | null}
+ * @returns {{ kind: string, code: string, params: Record<string, any> } | null}
  */
 export function detectPrimitive(geo) {
   const pos = geo.attributes.position;
@@ -56,9 +63,10 @@ export function detectPrimitive(geo) {
   const n = pos.count;
   /** @param {THREE.BufferGeometry} cand @param {string} kind @param {string} code */
   const tryCand = (cand, kind, code) => {
+    const params = /** @type {any} */ (cand).parameters;
     const ok = sameGeometry(geo, cand, tol);
     cand.dispose();
-    return ok ? { kind, code } : null;
+    return ok ? { kind, code, params } : null;
   };
 
   if (n === 24) {
@@ -119,6 +127,22 @@ export function detectPrimitive(geo) {
   return null;
 }
 
+/**
+ * Encoded bytes of a texture's image: the original JPEG/PNG from a GLB when available (no re-encode),
+ * otherwise the decoded pixels re-encoded as PNG.
+ * @param {THREE.Texture} t
+ * @returns {{ data: string, mime: string, ext: string }} base64 data
+ */
+export function textureImage(t) {
+  const original = imageSources.get(t.source);
+  const ext = original && IMAGE_EXT[original.mimeType];
+  if (original && ext) return { data: base64(original.bytes), mime: original.mimeType, ext };
+  const img = /** @type {CanvasImageSource & { width: number, height: number }} */ (t.image);
+  const canvas = Object.assign(document.createElement('canvas'), { width: img.width, height: img.height });
+  /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d')).drawImage(img, 0, 0);
+  return { data: canvas.toDataURL('image/png').split(',')[1], mime: 'image/png', ext: 'png' };
+}
+
 // ---------------------------------------------------------------- code generation
 
 // Material properties carried over when they differ from the three.js default (shared with fidelity.js).
@@ -134,6 +158,12 @@ export const MATERIAL_COLORS = /** @type {const} */ (['color', 'emissive', 'spec
 export const MATERIAL_VECTORS = /** @type {const} */ (['normalScale', 'clearcoatNormalScale']);
 export const MAP_SLOTS = /** @type {const} */ (['map', 'emissiveMap', 'normalMap', 'roughnessMap', 'metalnessMap', 'aoMap', 'alphaMap']);
 const SRGB_SLOTS = new Set(['map', 'emissiveMap']);
+/** Constructor arguments after the colour, per light type (glTF KHR_lights_punctual). @type {Record<string, string[]>} */
+const LIGHTS = {
+  PointLight: ['intensity', 'distance', 'decay'],
+  SpotLight: ['intensity', 'distance', 'angle', 'penumbra', 'decay'],
+  DirectionalLight: ['intensity'],
+};
 /** @type {Record<string, string>} */
 const IMAGE_EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
 /** @type {Record<number, string>} */
@@ -181,20 +211,8 @@ export async function decompile(scene, opts = {}) {
   /** @param {THREE.Texture} t @param {string} slot */
   const textureRef = (t, slot) => {
     if (texIds.has(t)) return texIds.get(t);
-    const original = imageSources.get(t.source);
-    const ext = original && IMAGE_EXT[original.mimeType];
-    if (original && ext) {
-      // Exact bytes from the GLB: no re-encode, no size inflation, no premultiplied-alpha drift.
-      const file = textureFile(textures.length, ext);
-      textures.push({ file, data: base64(original.bytes), mime: original.mimeType });
-    } else {
-      const img = /** @type {CanvasImageSource & { width: number, height: number }} */ (t.image);
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d')).drawImage(img, 0, 0);
-      textures.push({ file: textureFile(textures.length, 'png'), data: canvas.toDataURL('image/png').split(',')[1], mime: 'image/png' });
-    }
+    const image = textureImage(t);
+    textures.push({ file: textureFile(textures.length, image.ext), data: image.data, mime: image.mime });
     const entry = textures[textures.length - 1];
     const id = name('', `tex${texIds.size}`);
     let src = `'./${entry.file}'`;
@@ -207,6 +225,11 @@ export async function decompile(scene, opts = {}) {
     const wrap = (/** @type {number} */ w) => `THREE.${WRAP_NAMES[w] ?? 'RepeatWrapping'}`;
     if (t.wrapS !== THREE.RepeatWrapping) extra.push(`${id}.wrapS = ${wrap(t.wrapS)};`);
     if (t.wrapT !== THREE.RepeatWrapping) extra.push(`${id}.wrapT = ${wrap(t.wrapT)};`);
+    if (t.repeat.x !== 1 || t.repeat.y !== 1) extra.push(`${id}.repeat.set(${args(t.repeat.toArray())});`);
+    if (t.offset.x || t.offset.y) extra.push(`${id}.offset.set(${args(t.offset.toArray())});`);
+    if (t.rotation) extra.push(`${id}.rotation = ${num(t.rotation)};`);
+    if (t.center.x || t.center.y) extra.push(`${id}.center.set(${args(t.center.toArray())});`);
+    if (t.channel) extra.push(`${id}.channel = ${t.channel};`);
     matLines.push(`const ${id} = await tex(${src}, ${SRGB_SLOTS.has(slot)});${extra.length ? ' ' + extra.join(' ') : ''}`);
     return id;
   };
@@ -307,19 +330,30 @@ export async function decompile(scene, opts = {}) {
         sceneLines.push(`// instances: position xyz, rotation xyz (radians), scale xyz`);
         sceneLines.push(`[\n${rows.join('\n')}\n].forEach(([px, py, pz, rx, ry, rz, sx, sy, sz], i) => ${id}.setMatrixAt(i, new THREE.Matrix4().compose(` +
           `new THREE.Vector3(px, py, pz), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz)), new THREE.Vector3(sx, sy, sz))));`);
+        if (inst.instanceColor) {
+          const c = new THREE.Color();
+          const hexes = Array.from({ length: inst.count }, (_, i) => `0x${inst.getColorAt(i, c).getHexString()}`);
+          sceneLines.push(`// per-instance colours (multiply the material colour)`);
+          sceneLines.push(`[${hexes.join(', ')}].forEach((hex, i) => ${id}.setColorAt(i, new THREE.Color(hex)));`);
+        }
         summary.instancedMesh = (summary.instancedMesh ?? 0) + 1;
       } else {
         sceneLines.push(`const ${id} = new THREE.Mesh(${geo}, ${mat});`);
       }
     } else if (o.type === 'Group' || o.type === 'Object3D' || o.type === 'Scene') {
       sceneLines.push(`const ${id} = new THREE.Group();`);
+    } else if (LIGHTS[o.type]) {
+      const l = /** @type {any} */ (o);
+      sceneLines.push(`const ${id} = new THREE.${o.type}(${hex(l.color)}, ${LIGHTS[o.type].map((k) => num(l[k])).join(', ')});`);
+      if (l.target) sceneLines.push(`${id}.target.position.set(${args(l.target.position.toArray())}); ${id}.add(${id}.target);`);
+      summary.light = (summary.light ?? 0) + 1;
     } else {
       warnings.push(`${o.name || id}: ${o.type} not supported, replaced by an empty Group`);
       sceneLines.push(`const ${id} = new THREE.Group(); // was ${o.type}`);
     }
     sceneLines.push(...transform(o, id));
     if (parent) sceneLines.push(`${parent}.add(${id});`);
-    for (const child of o.children) emit(child, id);
+    for (const child of o.children) if (child !== /** @type {any} */ (o).target) emit(child, id); // a light's target is emitted with the light
     return id;
   };
 

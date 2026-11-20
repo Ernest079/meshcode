@@ -6,7 +6,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { decompile } from '../../src/core/decompile.js';
+import { toGodot, toUnity } from '../../src/core/engines.js';
 import { exportGLB, loadGLB, runModel, sceneStats } from '../../src/core/glb.js';
+import { encodeImage, renderImage } from '../../src/core/image.js';
 
 /** @param {Record<string, unknown>} msg @param {Transferable[]} [transfer] */
 const send = (msg, transfer = []) => parent.postMessage(msg, '*', transfer);
@@ -28,12 +30,73 @@ scene.add(grid);
 /** @type {THREE.Object3D | null} */
 let current = null;
 let pendingStats = false;
+let dark = true;
+
+// ------------------------------------------------------------------ 2D preview
+const view2d = document.createElement('canvas');
+view2d.style.display = 'none'; // inline display, not [hidden]: an inline display would override [hidden]
+view2d.title = 'Click: animation ⇄ whole sheet';
+document.body.append(view2d);
+/** @type {import('../../src/core/image.js').RenderedImage | null} */
+let image2d = null;
+let mode = '3d', frameIdx = 0, sheetView = false, timer = 0;
+
+function draw2d() {
+  if (!image2d) return;
+  const W = innerWidth, H = innerHeight, dpr = Math.min(devicePixelRatio, 2);
+  view2d.width = W * dpr;
+  view2d.height = H * dpr;
+  const ctx = /** @type {CanvasRenderingContext2D} */ (view2d.getContext('2d'));
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = dark ? '#111318' : '#f2f3f5';
+  ctx.fillRect(0, 0, W, H);
+  const { canvas: sheet, width, height, columns } = image2d;
+  const [sw, sh] = sheetView ? [sheet.width, sheet.height] : [width, height];
+  const [sx, sy] = sheetView ? [0, 0] : [(frameIdx % columns) * width, Math.floor(frameIdx / columns) * height];
+  let scale = Math.min((W - 32) / sw, (H - 32) / sh);
+  if (scale >= 2) scale = Math.floor(scale); // whole-number zoom keeps pixel art crisp
+  const dw = sw * scale, dh = sh * scale, x = (W - dw) / 2, y = (H - dh) / 2;
+  for (let cy = 0; cy < dh; cy += 10) { // checkerboard shows transparency
+    for (let cx = 0; cx < dw; cx += 10) {
+      ctx.fillStyle = ((cx + cy) / 10) % 2 ? (dark ? '#2a2d35' : '#d9dbe0') : (dark ? '#1e2027' : '#ffffff');
+      ctx.fillRect(x + cx, y + cy, Math.min(10, dw - cx), Math.min(10, dh - cy));
+    }
+  }
+  ctx.imageSmoothingEnabled = scale < 2;
+  ctx.drawImage(sheet, sx, sy, sw, sh, x, y, dw, dh);
+}
+
+function animate2d() {
+  clearInterval(timer);
+  if (!image2d || sheetView || image2d.frames < 2) return draw2d();
+  const { frames, fps } = image2d;
+  timer = window.setInterval(() => {
+    frameIdx = (frameIdx + 1) % frames;
+    draw2d();
+  }, 1000 / Math.max(1, fps));
+  draw2d();
+}
+view2d.addEventListener('click', () => {
+  sheetView = !sheetView;
+  animate2d();
+});
+
+/** Show the 3D viewport or the 2D preview; the 3D render loop only runs when visible. @param {string} next */
+function setMode(next) {
+  if (next === mode) return;
+  mode = next;
+  renderer.domElement.style.display = mode === '3d' ? 'block' : 'none';
+  view2d.style.display = mode === '2d' ? 'block' : 'none';
+  renderer.setAnimationLoop(mode === '3d' ? loop : null);
+  if (mode === '3d') clearInterval(timer);
+}
 
 function resize() {
   const { innerWidth: w, innerHeight: h } = window;
   renderer.setSize(w, h);
   camera.aspect = w / Math.max(h, 1);
   camera.updateProjectionMatrix();
+  draw2d();
 }
 addEventListener('resize', resize);
 resize();
@@ -70,7 +133,7 @@ function show(root) {
   pendingStats = true;
 }
 
-renderer.setAnimationLoop(() => {
+function loop() {
   controls.update();
   renderer.render(scene, camera);
   if (pendingStats && current) {
@@ -81,7 +144,24 @@ renderer.setAnimationLoop(() => {
       .then((glb) => send({ type: 'stats', stats, drawCalls: renderer.info.render.calls - 1, glbBytes: glb.byteLength }))
       .catch((err) => send({ type: 'error', message: `export: ${err.message}` }));
   }
-});
+}
+renderer.setAnimationLoop(loop);
+
+/** @param {string} code */
+async function run2d(code) {
+  try {
+    image2d = await renderImage(code);
+    frameIdx = 0;
+    animate2d();
+    const png = await encodeImage(image2d.canvas, 'image/png');
+    const { kind, width, height, frames, canvas } = image2d;
+    send({ type: 'stats2d', kind, width, height, frames, sheetWidth: canvas.width, sheetHeight: canvas.height, pngBytes: png.byteLength });
+    send({ type: 'ok' });
+  } catch (err) {
+    const e = /** @type {Error} */ (err);
+    send({ type: 'error', message: `${e.name}: ${e.message}` });
+  }
+}
 
 /** @param {string} code */
 async function run(code) {
@@ -103,12 +183,30 @@ addEventListener('message', async (event) => {
   if (event.source !== parent) return;
   const msg = event.data;
   try {
-    if (msg.type === 'run') await run(msg.code);
-    else if (msg.type === 'theme') scene.background = new THREE.Color(msg.dark ? 0x111318 : 0xf2f3f5);
-    else if (msg.type === 'export') {
-      if (!current) throw new Error('nothing to export yet');
-      const glb = await exportGLB(current);
-      send({ type: 'glb', buffer: glb, name: current.name || 'model' }, [glb]);
+    if (msg.type === 'run') {
+      setMode(msg.mode);
+      await (msg.mode === '2d' ? run2d(msg.code) : run(msg.code));
+    } else if (msg.type === 'theme') {
+      dark = msg.dark;
+      scene.background = new THREE.Color(dark ? 0x111318 : 0xf2f3f5);
+      draw2d();
+    } else if (msg.type === 'export') {
+      if (msg.format === 'glb') {
+        if (!current) throw new Error('nothing to export yet');
+        const glb = await exportGLB(current);
+        send({ type: 'file', buffer: glb, filename: `${current.name || 'model'}.glb`, mime: 'model/gltf-binary' }, [glb]);
+      } else if (msg.format === 'godot' || msg.format === 'unity') {
+        if (!current) throw new Error('nothing to export yet');
+        const out = (msg.format === 'godot' ? toGodot : toUnity)(current);
+        const buffer = new TextEncoder().encode(out.code).buffer;
+        send({ type: 'file', buffer, filename: out.filename, mime: 'text/plain', warnings: out.warnings }, [buffer]);
+      } else {
+        if (!image2d) throw new Error('nothing to export yet');
+        const mime = /** @type {const} */ ({ png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp' })[/** @type {'png'} */ (msg.format)];
+        if (!mime) throw new Error(`unknown format ${msg.format}`);
+        const buffer = await encodeImage(image2d.canvas, mime);
+        send({ type: 'file', buffer, filename: `${image2d.frames > 1 ? 'spritesheet' : 'image'}.${msg.format}`, mime }, [buffer]);
+      }
     } else if (msg.type === 'import') {
       const root = await loadGLB(msg.buffer);
       const r = await decompile(root, { inlineTextures: true, source: msg.name });

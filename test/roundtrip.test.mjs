@@ -1,5 +1,6 @@
 // code → GLB → load must preserve meshes, instances, triangles and bounding box.
 import assert from 'node:assert/strict';
+import { readdirSync } from 'node:fs';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -8,7 +9,12 @@ import validator from 'gltf-validator';
 import { buildFile, inspectGLB, withPage } from '../src/browser.mjs';
 import { meshoptGLB } from '../src/optimize.mjs';
 
-const EXAMPLES = ['torch', 'crates'];
+// Every example and fixture model must survive code → GLB → load.
+const MODELS = [
+  ...readdirSync('examples').filter((f) => f.endsWith('.js')).map((f) => `examples/${f}`),
+  'test/fixtures/primitives.js',
+  'test/fixtures/instanced.js',
+];
 
 /** Khronos reference validator: the GLB must have zero spec errors. @param {Uint8Array} glb */
 async function assertValid(glb) {
@@ -28,9 +34,9 @@ function assertSameModel(a, b, tol) {
   });
 }
 
-for (const name of EXAMPLES) {
-  test(`${name}: code → GLB → load roundtrip (raw and meshopt)`, async () => {
-    const { glb, stats } = await buildFile(`examples/${name}.js`);
+for (const model of MODELS) {
+  test(`${model}: code → GLB → load roundtrip (raw and meshopt)`, async () => {
+    const { glb, stats } = await buildFile(model);
     assert.ok(stats.triangles > 0, 'model has geometry');
     await assertValid(glb);
     assertSameModel(stats, await inspectGLB(glb), 1e-4);

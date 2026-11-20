@@ -9,6 +9,13 @@
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icon-192.png" />
+    <script>
+      // Apply the saved theme before first paint (no light flash in dark mode).
+      try {
+        var t = localStorage.getItem('meshcode:theme');
+      } catch (e) {}
+      if (t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark');
+    </script>
     <script type="module" src="./src/main.js"></script>
   </head>
   <body class="h-full bg-surface font-sans text-ink antialiased dark:bg-surface-dark dark:text-ink-dark">
@@ -19,25 +26,54 @@
           meshcode
         </h1>
 
+        <div class="inline-flex rounded-md border border-line p-0.5 dark:border-line-dark" role="group" aria-label="Mode">
+          <button id="mode-3d" type="button" aria-pressed="true" class="cursor-pointer rounded px-2.5 py-1 text-sm font-medium aria-pressed:bg-brand-500 aria-pressed:text-white">3D</button>
+          <button id="mode-2d" type="button" aria-pressed="false" class="cursor-pointer rounded px-2.5 py-1 text-sm font-medium aria-pressed:bg-brand-500 aria-pressed:text-white">2D</button>
+        </div>
+
         <label class="sr-only" for="examples">Load example</label>
-        <select id="examples" class="btn pr-2">
+        <select id="examples" class="btn max-w-56 pr-2">
           <option value="">Examples…</option>
-          <option value="torch">Torch (primitives + texture)</option>
-          <option value="crates">Crates (instancing)</option>
+          <optgroup label="3D">
+            <option value="torch">Wall torch · lathe, light, embers</option>
+            <option value="chest">Treasure chest · hinge, coin pile</option>
+            <option value="barrel">Barrel · profile function, hoops</option>
+            <option value="forest">Procedural forest · seed, instancing</option>
+            <option value="spaceship">Spaceship · extruded wings</option>
+            <option value="dungeon">Dungeon kit · modular pieces</option>
+          </optgroup>
+          <optgroup label="2D">
+            <option value="walk">Pixel walk cycle · sprite sheet</option>
+            <option value="cobble">Cobblestones · seamless texture</option>
+            <option value="parallax">Parallax layers · scrolling bg</option>
+            <option value="icons">Item icons · SVG</option>
+            <option value="ui">Game UI kit · HTML/CSS</option>
+          </optgroup>
         </select>
 
         <button id="run" type="button" class="btn btn-primary" title="Ctrl+Enter">Run</button>
-        <label class="btn" title="Turn a .glb into code (or drop a file anywhere)">
+        <label id="import-label" class="btn" title="Turn a .glb into code (or drop a file anywhere)">
           Import GLB
           <input id="import" type="file" accept=".glb,model/gltf-binary" class="sr-only" />
         </label>
-        <button id="export" type="button" class="btn">Export GLB</button>
+        <span class="inline-flex">
+          <button id="export" type="button" class="btn rounded-r-none">Export</button>
+          <label class="sr-only" for="format">Export format</label>
+          <select id="format" class="btn -ml-px rounded-l-none pr-2"></select>
+        </span>
         <button id="share" type="button" class="btn" title="Copy a link that contains this code">Share</button>
         <button id="install" type="button" class="btn" hidden>Install app</button>
 
+        <label class="sr-only" for="theme">Theme</label>
+        <select id="theme" class="btn ml-auto pr-2" title="Theme">
+          <option value="system">System theme</option>
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+        </select>
+
         <a
           href="https://github.com/Ernest079/meshcode"
-          class="ml-auto hidden text-sm text-muted underline-offset-4 sm:inline hover:text-ink hover:underline dark:hover:text-ink-dark"
+          class="hidden text-sm text-muted underline-offset-4 sm:inline hover:text-ink hover:underline dark:hover:text-ink-dark"
           >GitHub</a
         >
       </header>
@@ -59,12 +95,20 @@
         class="flex flex-wrap gap-x-5 gap-y-1 border-t border-line bg-panel px-3 py-1.5 font-mono text-xs text-muted dark:border-line-dark dark:bg-panel-dark"
         aria-live="polite"
       >
-        <span class="stat">meshes <span class="stat-value" data-stat="meshes">–</span></span>
-        <span class="stat">instances <span class="stat-value" data-stat="instances">–</span></span>
-        <span class="stat">triangles <span class="stat-value" data-stat="triangles">–</span></span>
-        <span class="stat">draw calls <span class="stat-value" data-stat="drawCalls">–</span></span>
+        <span class="contents" data-mode="3d">
+          <span class="stat">meshes <span class="stat-value" data-stat="meshes">–</span></span>
+          <span class="stat">instances <span class="stat-value" data-stat="instances">–</span></span>
+          <span class="stat">triangles <span class="stat-value" data-stat="triangles">–</span></span>
+          <span class="stat">draw calls <span class="stat-value" data-stat="drawCalls">–</span></span>
+        </span>
+        <span class="contents" data-mode="2d" hidden>
+          <span class="stat">source <span class="stat-value" data-stat="kind">–</span></span>
+          <span class="stat">size <span class="stat-value" data-stat="size">–</span></span>
+          <span class="stat">frames <span class="stat-value" data-stat="frames">–</span></span>
+        </span>
         <span class="stat">code <span class="stat-value" data-stat="codeKB">–</span></span>
-        <span class="stat">GLB <span class="stat-value" data-stat="glbKB">–</span></span>
+        <span class="stat" data-mode="3d">GLB <span class="stat-value" data-stat="glbKB">–</span></span>
+        <span class="stat" data-mode="2d" hidden>PNG <span class="stat-value" data-stat="pngKB">–</span></span>
         <span id="status" class="ml-auto"></span>
       </footer>
     </div>

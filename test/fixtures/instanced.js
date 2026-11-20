@@ -1,4 +1,4 @@
-// Crate stack: one InstancedMesh (exported as EXT_mesh_gpu_instancing).
+// Test fixture: one InstancedMesh (exported as EXT_mesh_gpu_instancing).
 /** @param {typeof import('three')} THREE */
 export default (THREE) => {
   const size = 0.5;

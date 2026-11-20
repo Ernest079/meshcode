@@ -1,5 +1,6 @@
 // GLB → code must rebuild the same model; primitives must come back as constructor calls.
 import assert from 'node:assert/strict';
+import { readdirSync } from 'node:fs';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -25,7 +26,7 @@ function assertFaithful(r, minIoU = 0.999) {
 
 test('torch: primitives detected, exact rebuild, stable on a second round trip, texture pixels kept', async () => {
   const dir = await tmp();
-  const glb = await glbOf('examples/torch.js', dir, 'torch');
+  const glb = await glbOf('test/fixtures/primitives.js', dir, 'torch');
   const first = await decompileFile(glb, path.join(dir, 'torch1.js'));
   assert.deepEqual(first.summary, { box: 1, cylinder: 1, cone: 1 });
   assert.match(first.code, /new THREE\.CylinderGeometry\(0\.05, 0\.035, 0\.8, 8\)/);
@@ -57,7 +58,7 @@ test('torch: primitives detected, exact rebuild, stable on a second round trip, 
 
 test('crates: InstancedMesh comes back with every instance', async () => {
   const dir = await tmp();
-  const r = await decompileFile(await glbOf('examples/crates.js', dir, 'crates'), path.join(dir, 'crates.js'));
+  const r = await decompileFile(await glbOf('test/fixtures/instanced.js', dir, 'crates'), path.join(dir, 'crates.js'));
   assert.deepEqual(r.summary, { box: 1, instancedMesh: 1 });
   assertFaithful(r);
 });
@@ -78,7 +79,7 @@ test('non-primitive geometry falls back to exact vertex data', async () => {
 
 test('meshopt (quantized) GLB decompiles faithfully', async () => {
   const dir = await tmp();
-  const raw = await buildFile('examples/torch.js');
+  const raw = await buildFile('test/fixtures/primitives.js');
   const glb = path.join(dir, 'torch.meshopt.glb');
   await writeFile(glb, await meshoptGLB(raw.glb));
   assertFaithful(await decompileFile(glb, path.join(dir, 'torch.js')), 0.99);
@@ -116,3 +117,15 @@ test('normal map without tangents keeps the flipped normalScale (relief not inve
   assert.equal(v.mean, 1, 'shape is identical');
   assert.ok(v.materials.some((d) => d.includes('normalScale')), `expected a normalScale diff, got ${JSON.stringify(v.materials)}`);
 });
+
+// Every shipped example must decompile back to the same shape AND look (materials, texture
+// transforms, instance colours, lights). This is what users get from Import GLB.
+for (const file of readdirSync('examples').filter((f) => f.endsWith('.js'))) {
+  test(`examples/${file}: decompile is faithful`, async () => {
+    const dir = await tmp();
+    const name = file.replace(/\.js$/, '');
+    const r = await decompileFile(await glbOf(`examples/${file}`, dir, name), path.join(dir, `${name}.out.js`));
+    assertFaithful(r);
+    assert.deepEqual(r.warnings, []);
+  });
+}

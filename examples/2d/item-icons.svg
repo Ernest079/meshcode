@@ -1,0 +1,50 @@
+<!-- Item icons (SVG) — techniques: shared <defs> gradients, one <g> per 128×128 icon placed with
+     transform, highlights as semi-transparent shapes. Export PNG for an atlas, or SVG to keep it vector. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="384" height="128" viewBox="0 0 384 128">
+  <defs>
+    <radialGradient id="potion" cx="45%" cy="40%" r="60%">
+      <stop offset="0" stop-color="#ff8fb1"/>
+      <stop offset="0.6" stop-color="#e0245e"/>
+      <stop offset="1" stop-color="#8c0f3a"/>
+    </radialGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f4f7fb"/>
+      <stop offset="0.5" stop-color="#c3ccd8"/>
+      <stop offset="1" stop-color="#7d8898"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe08a"/>
+      <stop offset="1" stop-color="#c88a1e"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4f7ae8"/>
+      <stop offset="1" stop-color="#22397a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Health potion -->
+  <g transform="translate(0 0)">
+    <rect x="54" y="14" width="20" height="12" rx="3" fill="#8b5a2b" stroke="#3b2412" stroke-width="3"/>
+    <path d="M56 26 h16 v14 c18 6 28 20 28 38 a36 36 0 0 1 -72 0 c0 -18 10 -32 28 -38 z" fill="url(#potion)" stroke="#2a0b17" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M37 72 q4 -16 18 -24" fill="none" stroke="#fff" stroke-opacity="0.65" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="74" cy="88" r="5" fill="#fff" fill-opacity="0.35"/>
+    <circle cx="60" cy="98" r="3" fill="#fff" fill-opacity="0.3"/>
+  </g>
+
+  <!-- Sword (diagonal) -->
+  <g transform="translate(128 0) rotate(-45 64 64)">
+    <path d="M58 10 h12 l2 66 h-16 z" fill="url(#blade)" stroke="#2b3240" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M64 12 v62" stroke="#ffffff" stroke-opacity="0.7" stroke-width="2"/>
+    <rect x="40" y="76" width="48" height="10" rx="4" fill="url(#gold)" stroke="#5a3a0a" stroke-width="3"/>
+    <rect x="58" y="86" width="12" height="22" rx="3" fill="#5b3a22" stroke="#2a180b" stroke-width="3"/>
+    <circle cx="64" cy="114" r="7" fill="url(#gold)" stroke="#5a3a0a" stroke-width="3"/>
+  </g>
+
+  <!-- Shield -->
+  <g transform="translate(256 0)">
+    <path d="M64 12 l42 14 v34 c0 28 -18 46 -42 58 c-24 -12 -42 -30 -42 -58 v-34 z" fill="url(#gold)" stroke="#4a2f08" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M64 22 l32 10 v28 c0 22 -14 37 -32 47 c-18 -10 -32 -25 -32 -47 v-28 z" fill="url(#shield)"/>
+    <path d="M64 40 l7 14 15 2 -11 10 3 15 -14 -7 -14 7 3 -15 -11 -10 15 -2 z" fill="url(#gold)" stroke="#4a2f08" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M36 34 q12 -6 22 -8" fill="none" stroke="#fff" stroke-opacity="0.5" stroke-width="4" stroke-linecap="round"/>
+  </g>
+</svg>

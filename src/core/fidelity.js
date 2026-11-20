@@ -103,12 +103,13 @@ export function silhouetteIoU(a, b, size = 256) {
  */
 export function materialDiff(a, b) {
   /** @param {THREE.Object3D} root */
-  const mats = (root) => {
+  const meshes = (root) => {
     /** @type {any[]} */ const out = [];
-    root.traverse((o) => { if (o instanceof THREE.Mesh) out.push(Array.isArray(o.material) ? o.material[0] : o.material); });
+    root.traverse((o) => { if (o instanceof THREE.Mesh) out.push(o); });
     return out;
   };
-  const ma = mats(a), mb = mats(b);
+  const meshA = meshes(a), meshB = meshes(b);
+  const ma = meshA.map((o) => [o.material].flat()[0]), mb = meshB.map((o) => [o.material].flat()[0]);
   if (ma.length !== mb.length) return [`mesh count ${ma.length} vs ${mb.length}`];
   /** @type {string[]} */ const diffs = [];
   const close = (/** @type {number} */ x, /** @type {number} */ y) => Math.abs(x - y) <= 1e-4 * Math.max(1, Math.abs(x));
@@ -123,7 +124,16 @@ export function materialDiff(a, b) {
       if (!same) diffs.push(`${at}: ${k} ${x[k]} vs ${y[k]}`);
     }
     for (const k of MATERIAL_VECTORS) if (x[k]?.isVector2 && !(close(x[k].x, y[k].x) && close(x[k].y, y[k].y))) diffs.push(`${at}: ${k} ${x[k].toArray()} vs ${y[k].toArray()}`);
-    for (const k of MAP_SLOTS) if (!!x[k] !== !!y[k]) diffs.push(`${at}: ${k} ${x[k] ? 'present' : 'missing'} vs ${y[k] ? 'present' : 'missing'}`);
+    for (const k of MAP_SLOTS) {
+      if (!!x[k] !== !!y[k]) diffs.push(`${at}: ${k} ${x[k] ? 'present' : 'missing'} vs ${y[k] ? 'present' : 'missing'}`);
+      else if (x[k]) for (const t of ['repeat', 'offset', 'center']) {
+        if (!(close(x[k][t].x, y[k][t].x) && close(x[k][t].y, y[k][t].y))) diffs.push(`${at}: ${k}.${t} ${x[k][t].toArray()} vs ${y[k][t].toArray()}`);
+      }
+    }
+    // Per-instance colours are part of the look of an InstancedMesh.
+    const ca = meshA[i].instanceColor, cb = meshB[i].instanceColor;
+    if (!!ca !== !!cb) diffs.push(`${at}: instance colours ${ca ? 'present' : 'missing'} vs ${cb ? 'present' : 'missing'}`);
+    else if (ca && ca.array.some((/** @type {number} */ v, /** @type {number} */ j) => Math.abs(v - cb.array[j]) > 2 / 255)) diffs.push(`${at}: instance colours differ`);
   });
   return diffs;
 }

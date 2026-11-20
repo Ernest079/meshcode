@@ -39,9 +39,9 @@ after(async () => {
 
 test('default example renders and its exported GLB matches the CLI build', async () => {
   const cli = (await buildFile('examples/torch.js')).stats;
-  await statsReady(String(cli.triangles));
+  await statsReady(cli.triangles.toLocaleString('en'));
   assert.equal(await stat('meshes').textContent(), String(cli.meshes));
-  assert.equal(await stat('drawCalls').textContent(), '3');
+  assert.equal(await stat('drawCalls').textContent(), String(cli.meshes), 'one draw call per mesh (instancing included)');
 
   const [download] = await Promise.all([page.waitForEvent('download'), page.click('#export')]);
   assert.equal(download.suggestedFilename(), 'torch.glb');
@@ -56,7 +56,7 @@ test('default example renders and its exported GLB matches the CLI build', async
 test('importing a GLB puts equivalent code in the editor', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'meshcode-'));
   const file = path.join(dir, 'crates.glb');
-  await writeFile(file, (await buildFile('examples/crates.js')).glb);
+  await writeFile(file, (await buildFile('test/fixtures/instanced.js')).glb);
   await page.setInputFiles('#import', file);
   await statsReady('72');
   assert.match(await code(), /new THREE\.InstancedMesh\(g0, mat0, 6\)/);
@@ -66,7 +66,7 @@ test('importing a GLB puts equivalent code in the editor', async () => {
 test('share link restores the exact code in a fresh page', async () => {
   const original = await code();
   await page.click('#share');
-  await page.waitForFunction(() => location.hash.startsWith('#code='));
+  await page.waitForFunction(() => location.hash.startsWith('#mode=3d&code='));
   const other = await context.newPage();
   await other.goto(page.url());
   await other.waitForFunction(() => document.querySelector('[data-stat="triangles"]')?.textContent === '72', null, { timeout: 20000 });
@@ -91,7 +91,7 @@ test('PWA: valid manifest and works offline after the first visit', async () => 
   const ctx = await browser.newContext();
   try {
     const p = await ctx.newPage();
-    const loaded = () => p.waitForFunction(() => document.querySelector('[data-stat="triangles"]')?.textContent === '60', null, { timeout: 20000 });
+    const loaded = () => p.waitForFunction(() => !['–', undefined].includes(document.querySelector('[data-stat="triangles"]')?.textContent), null, { timeout: 20000 });
     await p.goto(server.url);
     await loaded();
     await p.evaluate(() => navigator.serviceWorker.ready);
@@ -105,4 +105,57 @@ test('PWA: valid manifest and works offline after the first visit', async () => 
   } finally {
     await ctx.close();
   }
+});
+
+test('theme picker applies and remembers light/dark', async () => {
+  const p = await context.newPage();
+  await p.goto(server.url);
+  const isDark = () => p.evaluate(() => document.documentElement.classList.contains('dark'));
+  await p.selectOption('#theme', 'dark');
+  assert.equal(await isDark(), true);
+  await p.reload();
+  assert.equal(await isDark(), true, 'remembered across reloads, applied before first paint');
+  await p.selectOption('#theme', 'light');
+  assert.equal(await isDark(), false);
+  await p.selectOption('#theme', 'system');
+  await p.close();
+});
+
+test('2D mode: example renders, exports PNG at sheet size, SVG source exports as-is', async () => {
+  const p = await context.newPage();
+  await p.goto(server.url);
+  await p.selectOption('#examples', 'walk');
+  await p.waitForFunction(() => document.querySelector('[data-stat="frames"]')?.textContent === '8 → sheet 512×64', null, { timeout: 20000 });
+  assert.equal(await p.getAttribute('#mode-2d', 'aria-pressed'), 'true');
+  await p.selectOption('#format', 'png');
+  const [png] = await Promise.all([p.waitForEvent('download'), p.click('#export')]);
+  assert.equal(png.suggestedFilename(), 'spritesheet.png');
+  const bytes = await readFile(/** @type {string} */ (await png.path()));
+  assert.deepEqual([bytes.readUInt32BE(16), bytes.readUInt32BE(20)], [512, 64]);
+
+  await p.selectOption('#examples', 'icons');
+  await p.waitForFunction(() => document.querySelector('[data-stat="kind"]')?.textContent === 'svg', null, { timeout: 20000 });
+  await p.selectOption('#format', 'svg');
+  const [svg] = await Promise.all([p.waitForEvent('download'), p.click('#export')]);
+  const source = await p.evaluate(() => globalThis.meshcodeEditor.state.doc.toString());
+  assert.equal(await readFile(/** @type {string} */ (await svg.path()), 'utf8'), source);
+
+  // Share link keeps the mode.
+  await p.click('#share');
+  await p.waitForFunction(() => location.hash.startsWith('#mode=2d&code='));
+  await p.close();
+});
+
+test('3D export to Godot and Unity downloads engine source', async () => {
+  const p = await context.newPage();
+  await p.goto(server.url);
+  await p.selectOption('#examples', 'spaceship');
+  await p.waitForFunction(() => document.querySelector('[data-stat="meshes"]')?.textContent === '21', null, { timeout: 20000 });
+  for (const [format, file, marker] of [['godot', 'spaceship.gd', 'extends Node3D'], ['unity', 'SpaceshipModel.cs', 'public class SpaceshipModel : MonoBehaviour']]) {
+    await p.selectOption('#format', format);
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#export')]);
+    assert.equal(dl.suggestedFilename(), file);
+    assert.ok((await readFile(/** @type {string} */ (await dl.path()), 'utf8')).includes(marker));
+  }
+  await p.close();
 });
