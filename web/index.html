@@ -62,6 +62,7 @@
           <select id="format" class="btn -ml-px rounded-l-none pr-2"></select>
         </span>
         <button id="share" type="button" class="btn" title="Copy a link that contains this code">Share</button>
+        <button id="ai-toggle" type="button" class="btn aria-expanded:border-brand-500 aria-expanded:text-brand-500 dark:aria-expanded:border-brand-400 dark:aria-expanded:text-brand-400" aria-expanded="false" aria-controls="ai-panel" title="Optional: generate or edit code with a local model or your API key">AI</button>
         <button id="install" type="button" class="btn" hidden>Install app</button>
 
         <label class="sr-only" for="theme">Theme</label>
@@ -73,10 +74,28 @@
 
         <a
           href="https://github.com/Ernest079/meshcode"
-          class="hidden text-sm text-muted underline-offset-4 sm:inline hover:text-ink hover:underline dark:hover:text-ink-dark"
+          class="hidden text-sm text-muted underline-offset-4 xl:inline hover:text-ink hover:underline dark:hover:text-ink-dark"
           >GitHub</a
         >
       </header>
+
+      <form id="ai-panel" hidden class="flex flex-wrap items-center gap-2 border-b border-line bg-panel px-3 py-2 dark:border-line-dark dark:bg-panel-dark">
+        <label class="sr-only" for="ai-prompt">Describe a model, or the change you want</label>
+        <input id="ai-prompt" class="field min-w-48 flex-1" autocomplete="off" placeholder="Describe a model, or the change you want…" />
+        <button id="ai-generate" type="submit" class="btn btn-primary" title="New code from the description">Generate</button>
+        <button id="ai-edit" type="button" class="btn" title="Change the current code as described">Edit</button>
+        <button id="ai-refine" type="button" class="btn" data-mode="3d" title="Rewrite an imported GLB as readable code, kept only if it still matches the GLB">Refine import</button>
+        <label class="inline-flex items-center gap-1.5 text-sm" title="Vision models: show the render to the model once and let it improve it">
+          <input id="ai-critique" type="checkbox" class="accent-brand-500" /> Visual critique
+        </label>
+        <button id="ai-stop" type="button" class="btn" hidden>Stop</button>
+        <button id="ai-settings-open" type="button" class="btn">Settings</button>
+        <span id="ai-review" hidden class="inline-flex items-center gap-2">
+          <span class="text-sm text-muted">AI change:</span>
+          <button id="ai-accept" type="button" class="btn btn-primary">Accept</button>
+          <button id="ai-reject" type="button" class="btn">Reject</button>
+        </span>
+      </form>
 
       <main class="grid min-h-0 flex-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1">
         <section id="editor" class="min-h-0 overflow-hidden" aria-label="Model code"></section>
@@ -112,5 +131,43 @@
         <span id="status" class="ml-auto"></span>
       </footer>
     </div>
+
+    <dialog id="ai-settings" aria-labelledby="ai-settings-title" class="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-line bg-panel text-ink shadow-xl backdrop:bg-black/50 dark:border-line-dark dark:bg-panel-dark dark:text-ink-dark">
+      <form method="dialog" class="grid grid-cols-1 gap-3 p-4 text-sm">
+        <h2 id="ai-settings-title" class="text-base font-semibold">AI settings</h2>
+        <p class="text-muted">Optional. Requests go straight from your browser to the provider you choose: meshcode has no server.</p>
+        <label class="grid grid-cols-1 gap-1">Provider
+          <select id="ai-provider" class="field">
+            <option value="openai">OpenAI-compatible (Ollama, LM Studio, OpenAI, OpenRouter…)</option>
+            <option value="anthropic">Anthropic (Claude)</option>
+          </select>
+        </label>
+        <label class="grid grid-cols-1 gap-1" data-provider="openai">Base URL
+          <input id="ai-base-url" class="field" type="url" autocomplete="off" />
+        </label>
+        <label class="grid grid-cols-1 gap-1">API key
+          <input id="ai-key" class="field" type="password" autocomplete="off" />
+        </label>
+        <label class="inline-flex items-start gap-2">
+          <input id="ai-remember" type="checkbox" class="mt-0.5 accent-brand-500" />
+          <span>Remember the key on this device
+            <span class="block text-xs text-muted">Off: it lives in this tab only. On: it is saved in this browser's storage, readable by any page on this origin (on github.io, every project of the same account).</span>
+          </span>
+        </label>
+        <label class="grid grid-cols-1 gap-1">Model
+          <span class="flex gap-2">
+            <input id="ai-model" class="field min-w-0 flex-1" list="ai-models" autocomplete="off" />
+            <button id="ai-load-models" type="button" class="btn">Load list</button>
+          </span>
+        </label>
+        <datalist id="ai-models"></datalist>
+        <p class="text-xs text-muted" data-provider="openai">
+          Ollama works from localhost as is. From this site, start it with <code id="ai-ollama-hint" class="font-mono break-all"></code>.
+          Small local models write weaker 3D code than large ones.
+        </p>
+        <p id="ai-settings-status" class="text-xs text-muted" aria-live="polite"></p>
+        <div class="flex justify-end"><button class="btn btn-primary" value="done">Done</button></div>
+      </form>
+    </dialog>
   </body>
 </html>

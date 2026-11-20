@@ -49,6 +49,7 @@ const kb = (/** @type {number} */ n) => `${(n / 1024).toFixed(1)} KB`;
 /** @type {Mode} */
 let mode = '3d';
 let kind2d = ''; // last rendered 2D source kind: canvas | svg | html
+let imported = false; // the frame holds an imported GLB (reference for AI refine)
 
 /** Storage is a convenience only: blocked storage (private mode) must never break the app. */
 const store = {
@@ -63,6 +64,7 @@ const THEME_KEY = 'meshcode:theme';
 const systemDark = matchMedia('(prefers-color-scheme: dark)');
 const editorTheme = new Compartment();
 const editorLanguage = new Compartment();
+const editorReview = new Compartment(); // AI: diff against the code before the change
 /** @type {'system' | 'light' | 'dark'} */
 let themePref = /** @type {any} */ (['light', 'dark'].includes(store.get(THEME_KEY) ?? '') ? store.get(THEME_KEY) : 'system');
 const isDark = () => themePref === 'dark' || (themePref === 'system' && systemDark.matches);
@@ -71,15 +73,17 @@ const isDark = () => themePref === 'dark' || (themePref === 'system' && systemDa
 
 let runTimer = 0;
 let language = 'js';
+let aiBusy = false; // the AI is streaming code into the editor: no live runs, no draft saves
 const editor = new EditorView({
   parent: $('#editor'),
   extensions: [
     basicSetup,
     editorLanguage.of(javascript()),
     editorTheme.of([]), // set by applyTheme()
+    editorReview.of([]),
     EditorView.theme({ '&': { height: '100%' }, '.cm-scroller': { overflow: 'auto' } }),
     EditorView.updateListener.of((u) => {
-      if (!u.docChanged) return;
+      if (!u.docChanged || aiBusy) return;
       syncLanguage();
       clearTimeout(runTimer);
       runTimer = window.setTimeout(run, 600); // live preview while typing
@@ -147,6 +151,17 @@ let note = ''; // shown once the next run finishes (e.g. the import summary)
 /** @param {Record<string, unknown>} msg @param {Transferable[]} [transfer] */
 const post = (msg, transfer = []) => viewer.contentWindow?.postMessage(msg, '*', transfer);
 
+/** Post a message and wait for the frame's reply with the same id (used by the AI loops). */
+let nextId = 1;
+/** @type {Map<number, (msg: any) => void>} */
+const pending = new Map();
+/** @param {Record<string, unknown>} msg @returns {Promise<any>} */
+const request = (msg) => new Promise((resolve) => {
+  const id = nextId++;
+  pending.set(id, resolve);
+  post({ ...msg, id });
+});
+
 function run() {
   if (!ready) return;
   status.textContent = 'running…';
@@ -180,6 +195,8 @@ function syncFormats() {
 window.addEventListener('message', async (event) => {
   if (event.source !== viewer.contentWindow) return; // only our frame
   const msg = event.data ?? {};
+  pending.get(msg.id)?.(msg);
+  pending.delete(msg.id);
   switch (msg.type) {
     case 'booting':
       post({ type: 'boot', source: await runtimeSource.catch((e) => (showError(e.message), '')) });
@@ -219,7 +236,9 @@ window.addEventListener('message', async (event) => {
     case 'decompiled': {
       const kinds = Object.entries(msg.summary).map(([k, v]) => `${k} ×${v}`).join(', ');
       note = `imported: ${kinds || 'no meshes'}${msg.warnings.length ? ` · ${msg.warnings.length} warnings` : ''}`;
+      imported = true;
       for (const w of msg.warnings) console.warn(`meshcode: ${w}`);
+      app.onReplace?.();
       setCode(String(msg.code));
       clearTimeout(runTimer); // run now, not after the typing debounce
       run();
@@ -258,6 +277,7 @@ function setMode(next, code) {
     if (code === undefined) code = loadDraft(mode) ?? DEFAULT_CODE[mode];
   }
   if (code !== undefined) {
+    app.onReplace?.();
     const wasEnabled = draftEnabled;
     draftEnabled = false; // switching shows the other draft; don't copy it over this mode's
     setCode(code);
@@ -294,7 +314,10 @@ $('#import').addEventListener('change', (e) => {
 $('#examples').addEventListener('change', (e) => {
   const select = /** @type {HTMLSelectElement} */ (e.target);
   const example = EXAMPLES[select.value];
-  if (example) setMode(example.mode, example.code);
+  if (example) {
+    imported = false;
+    setMode(example.mode, example.code);
+  }
   select.value = '';
 });
 
@@ -309,6 +332,43 @@ document.addEventListener('drop', (e) => {
 });
 document.addEventListener('dragleave', (e) => {
   if (!e.relatedTarget) viewer.classList.remove('pointer-events-none');
+});
+
+// ------------------------------------------------------------------ optional AI (web/src/ai.js, loaded on first open)
+
+/** What ai.js may touch. */
+const app = {
+  editor, getCode, request, status,
+  mode: () => mode,
+  imported: () => imported,
+  /** @param {boolean} busy */
+  setBusy(busy) {
+    aiBusy = busy;
+    if (!busy) syncLanguage();
+  },
+  /** @param {string} code */
+  setCode,
+  run() {
+    clearTimeout(runTimer);
+    run();
+  },
+  saveDraft,
+  review: editorReview,
+  /** Status text to show once the next run finishes. @param {string} text */
+  notify(text) {
+    note = text;
+  },
+  /** Set by ai.js: called when an example or an import replaces the code. @type {(() => void) | undefined} */
+  onReplace: undefined,
+};
+let aiLoaded = /** @type {Promise<unknown> | null} */ (null);
+$('#ai-toggle').addEventListener('click', async () => {
+  const panel = $('#ai-panel');
+  panel.hidden = !panel.hidden;
+  $('#ai-toggle').setAttribute('aria-expanded', String(!panel.hidden));
+  aiLoaded ??= import('./ai.js').then((m) => m.setupAI(app));
+  await aiLoaded;
+  if (!panel.hidden) $('#ai-prompt').focus();
 });
 
 // ------------------------------------------------------------------ share links: #mode=2d&code=<deflate-raw, base64url>

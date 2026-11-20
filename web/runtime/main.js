@@ -7,8 +7,10 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { decompile } from '../../src/core/decompile.js';
 import { toGodot, toUnity } from '../../src/core/engines.js';
-import { exportGLB, loadGLB, runModel, sceneStats } from '../../src/core/glb.js';
-import { encodeImage, renderImage } from '../../src/core/image.js';
+import { materialDiff, silhouetteIoU } from '../../src/core/fidelity.js';
+import { exportGLB, loadGLB, runSource, sceneStats } from '../../src/core/glb.js';
+import { coverage, encodeImage, renderImage } from '../../src/core/image.js';
+import { imageView, renderViews } from '../../src/core/views.js';
 
 /** @param {Record<string, unknown>} msg @param {Transferable[]} [transfer] */
 const send = (msg, transfer = []) => parent.postMessage(msg, '*', transfer);
@@ -29,6 +31,8 @@ scene.add(grid);
 
 /** @type {THREE.Object3D | null} */
 let current = null;
+/** @type {THREE.Object3D | null} */
+let imported = null; // last imported GLB: the reference for AI refine checks
 let pendingStats = false;
 let dark = true;
 
@@ -147,8 +151,9 @@ function loop() {
 }
 renderer.setAnimationLoop(loop);
 
-/** @param {string} code */
-async function run2d(code) {
+/** Replies to a run carry its id (the AI loop waits for them) and whether the result is empty.
+ * @param {string} code @param {number} [id] */
+async function run2d(code, id) {
   try {
     image2d = await renderImage(code);
     frameIdx = 0;
@@ -156,26 +161,22 @@ async function run2d(code) {
     const png = await encodeImage(image2d.canvas, 'image/png');
     const { kind, width, height, frames, canvas } = image2d;
     send({ type: 'stats2d', kind, width, height, frames, sheetWidth: canvas.width, sheetHeight: canvas.height, pngBytes: png.byteLength });
-    send({ type: 'ok' });
+    send({ type: 'ok', id, empty: coverage(canvas) === 0 });
   } catch (err) {
     const e = /** @type {Error} */ (err);
-    send({ type: 'error', message: `${e.name}: ${e.message}` });
+    send({ type: 'error', id, message: `${e.name}: ${e.message}` });
   }
 }
 
-/** @param {string} code */
-async function run(code) {
-  const url = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+/** @param {string} code @param {number} [id] */
+async function run(code, id) {
   try {
-    const mod = await import(/* @vite-ignore */ url);
-    show(await runModel(mod.default));
-    send({ type: 'ok' });
+    const root = await runSource(code);
+    show(root);
+    send({ type: 'ok', id, empty: sceneStats(root).triangles === 0 });
   } catch (err) {
     const e = /** @type {Error} */ (err);
-    const hint = /resolve module specifier/i.test(e.message) ? ' — imports are not available here: use the THREE argument' : '';
-    send({ type: 'error', message: `${e.name}: ${e.message}${hint}` });
-  } finally {
-    URL.revokeObjectURL(url);
+    send({ type: 'error', id, message: `${e.name}: ${e.message}` });
   }
 }
 
@@ -185,7 +186,7 @@ addEventListener('message', async (event) => {
   try {
     if (msg.type === 'run') {
       setMode(msg.mode);
-      await (msg.mode === '2d' ? run2d(msg.code) : run(msg.code));
+      await (msg.mode === '2d' ? run2d(msg.code, msg.id) : run(msg.code, msg.id));
     } else if (msg.type === 'theme') {
       dark = msg.dark;
       scene.background = new THREE.Color(dark ? 0x111318 : 0xf2f3f5);
@@ -208,12 +209,21 @@ addEventListener('message', async (event) => {
         send({ type: 'file', buffer, filename: `${image2d.frames > 1 ? 'spritesheet' : 'image'}.${msg.format}`, mime }, [buffer]);
       }
     } else if (msg.type === 'import') {
-      const root = await loadGLB(msg.buffer);
-      const r = await decompile(root, { inlineTextures: true, source: msg.name });
+      imported = await loadGLB(msg.buffer);
+      const r = await decompile(imported, { inlineTextures: true, source: msg.name });
       send({ type: 'decompiled', code: r.code, summary: r.summary, warnings: r.warnings });
+    } else if (msg.type === 'capture') { // AI visual critique: snapshots of what is on screen
+      const target = mode === '2d' ? image2d?.canvas : current;
+      if (!target) throw new Error('nothing rendered yet');
+      send({ type: 'captured', id: msg.id, images: mode === '2d' ? imageView(/** @type {HTMLCanvasElement} */ (target)) : renderViews(/** @type {THREE.Object3D} */ (target)) });
+    } else if (msg.type === 'verify') { // AI refine: compare a candidate with the imported GLB, off screen
+      if (!imported) throw new Error('import a GLB first');
+      const root = await runSource(msg.code);
+      send({ type: 'verified', id: msg.id, mean: silhouetteIoU(imported, root).mean, materials: materialDiff(imported, root) });
     }
   } catch (err) {
-    send({ type: 'error', message: /** @type {Error} */ (err).message });
+    const e = /** @type {Error} */ (err);
+    send({ type: 'error', id: msg.id, message: msg.id ? `${e.name}: ${e.message}` : e.message });
   }
 });
 

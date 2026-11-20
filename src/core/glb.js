@@ -22,6 +22,23 @@ export async function runModel(factory) {
 }
 
 /**
+ * Run model source text (a module with `export default (THREE) => Object3D`), imported from a blob URL.
+ * @param {string} code
+ */
+export async function runSource(code) {
+  const url = URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+  try {
+    return await runModel((await import(/* @vite-ignore */ url)).default);
+  } catch (err) {
+    const e = /** @type {Error} */ (err);
+    if (/resolve module specifier/i.test(e.message)) e.message += ' — imports are not available here: use the THREE argument';
+    throw e;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/**
  * Export an Object3D as binary glTF.
  * @param {THREE.Object3D} root
  * @returns {Promise<ArrayBuffer>}

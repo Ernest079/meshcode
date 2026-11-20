@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { generate, refine } from './core/llm.js';
 
 const SRC_DIR = path.dirname(fileURLToPath(import.meta.url));
 // three's exports map hides package.json; resolve the CJS build and walk up.
@@ -216,6 +217,75 @@ export async function exportEngineFile(input, engine) {
     });
     return { ...out, boxes };
   }, { file: path.basename(abs), engine }));
+}
+
+/**
+ * What the AI loops need, backed by a headless page: run a candidate, snapshot the last good one,
+ * verify one against the GLB loaded as globalThis.__orig.
+ * @param {import('playwright-core').Page} page @param {'3d' | '2d'} mode
+ */
+function aiTools(page, mode) {
+  const fail = (/** @type {any} */ e) => ({ error: `${e?.name ?? 'Error'}: ${e?.message ?? e}` });
+  return {
+    run: (/** @type {string} */ code) => page.evaluate(async ({ code, mode }) => {
+      try {
+        if (mode === '2d') {
+          const img = await import('/meshcode/core/image.js');
+          const out = await img.renderImage(code);
+          globalThis.__last = out.canvas;
+          return { empty: img.coverage(out.canvas) === 0 };
+        }
+        const core = await import('/meshcode/core/glb.js');
+        globalThis.__last = await core.runSource(code);
+        return { empty: core.sceneStats(globalThis.__last).triangles === 0 };
+      } catch (e) {
+        return { error: `${e?.name ?? 'Error'}: ${e?.message ?? e}` };
+      }
+    }, { code, mode }).catch(fail),
+    capture: () => page.evaluate(async (mode) => {
+      const views = await import('/meshcode/core/views.js');
+      return mode === '2d' ? views.imageView(globalThis.__last) : views.renderViews(globalThis.__last);
+    }, mode),
+    verify: (/** @type {string} */ code) => page.evaluate(async (code) => {
+      try {
+        const core = await import('/meshcode/core/glb.js');
+        const { materialDiff, silhouetteIoU } = await import('/meshcode/core/fidelity.js');
+        const root = await core.runSource(code);
+        return { mean: silhouetteIoU(globalThis.__orig, root).mean, materials: materialDiff(globalThis.__orig, root) };
+      } catch (e) {
+        return { error: `${e?.name ?? 'Error'}: ${e?.message ?? e}` };
+      }
+    }, code).catch(fail),
+  };
+}
+
+/**
+ * AI: write a model (or 2D image) from a description; every candidate runs in headless Chrome.
+ * @param {Omit<Parameters<typeof generate>[0], 'run' | 'capture'>} opts
+ */
+export function generateWithLLM(opts) {
+  return withPage({}, (page) => {
+    const t = aiTools(page, opts.mode);
+    return generate({ ...opts, run: t.run, capture: t.capture });
+  });
+}
+
+/**
+ * AI: GLB → deterministic code (textures inline, one file) → readable rewrite, accepted only if it
+ * matches the GLB. Without a match, the deterministic code comes back.
+ * @param {string} glbPath @param {Omit<Parameters<typeof refine>[0], 'code' | 'verify'>} opts
+ */
+export async function refineGLB(glbPath, opts) {
+  const glb = await readFile(glbPath);
+  return withPage({}, async (page) => {
+    const code = await page.evaluate(async ({ b64, source }) => {
+      const core = await import('/meshcode/core/glb.js');
+      const { decompile } = await import('/meshcode/core/decompile.js');
+      globalThis.__orig = await core.loadGLB(globalThis.__fromB64(b64));
+      return (await decompile(globalThis.__orig, { inlineTextures: true, source })).code;
+    }, { b64: glb.toString('base64'), source: path.basename(glbPath) });
+    return refine({ ...opts, code, verify: aiTools(page, '3d').verify });
+  });
 }
 
 /** @typedef {{ meshes: number, instances: number, triangles: number, min: number[], max: number[] }} Stats */

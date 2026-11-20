@@ -4,9 +4,13 @@
 
 Escribe modelos 3D como código y conviértelos en GLB, o convierte un GLB de vuelta en código.
 
+![App web de meshcode: una antorcha de pared, un bosque procedural que se regenera al cambiar su semilla, una nave, y luego el modo 2D con un ciclo de caminata en pixel art, íconos SVG y una interfaz de juego en HTML/CSS](docs/demo.gif)
+
+<sub>Grabado con `pnpm demo:gif` (Chrome headless + ImageMagick).</sub>
+
 meshcode incluye además un benchmark abierto que responde una pregunta: **¿es más eficiente distribuir los assets de un juego como archivos (GLB/PNG), como código o como un híbrido de ambos?** Los agentes de IA construyen cada vez más juegos sin ningún archivo de assets: cada malla, textura y efecto es código. Este proyecto mide cuánto cuesta eso en tiempo de ejecución.
 
-> Estado: **trabajo temprano en curso** (fase 3.8). La app web (3D + 2D), la exportación a motores (Godot, Unity) y la CLI ya funcionan; la IA opcional es lo siguiente.
+> Estado: **trabajo temprano en curso** (fase 3.10). La app web (3D + 2D), la exportación a motores (Godot, Unity), la IA opcional y la CLI ya funcionan; lo siguiente es el juego de prueba.
 
 ## Planeado
 
@@ -22,13 +26,13 @@ meshcode incluye además un benchmark abierto que responde una pregunta: **¿es 
 
 - [x] 1. Esqueleto del repo + dossier de investigación
 - [x] 2. `meshcode build` (código → GLB)
-- [x] 3. `meshcode decompile` (GLB → código) + métrica de fidelidad por IoU de siluetas (falta el refinamiento `--llm`)
+- [x] 3. `meshcode decompile` (GLB → código) + métrica de fidelidad por IoU de siluetas (+ refinamiento `--llm`, 3.9)
 - [x] 3.5. App web + PWA (GitHub Pages)
 - [x] 3.6. Tema claro/oscuro + ejemplos detallados
 - [x] 3.7. Modo 2D: imágenes desde código (Canvas, SVG, HTML/CSS → PNG/JPG/WebP)
 - [x] 3.8. Exportar a motores: Godot (GDScript), Unity (C#, experimental); Unreal vía GLB
-- [ ] 3.9. IA opcional: modelos locales o tu propia API key (generar, reparar, refinar importaciones)
-- [ ] 3.10. GIF de demostración en el README
+- [x] 3.9. IA opcional: modelos locales o tu propia API key (generar, reparar, refinar importaciones)
+- [x] 3.10. GIF de demostración en el README
 - [ ] 4. Juego de prueba en tres variantes (estudio controlado + estudio con assets reales)
 - [ ] 5. Arnés de medición (escritorio + Android)
 - [ ] 6. Análisis, gráficos, release + DOI
@@ -101,6 +105,25 @@ pnpm meshcode export model.glb --to godot -o Model.gd      # también acepta .gl
 
 Godot conserva las primitivas editables (`BoxMesh`, `CylinderMesh`, `SphereMesh`, `PlaneMesh`) cuando la malla no tiene textura; lo demás va como datos de vértices exactos en un `ArrayMesh`, y los `InstancedMesh` pasan a `MultiMesh`. La intensidad de las luces usa unidades distintas en cada motor: ajústala después de importar.
 
+## IA (opcional)
+
+meshcode funciona completo sin IA. Si la quieres, pulsa **AI** en la app web y abre **Settings**:
+
+| Proveedor | Ejemplos | Clave |
+|---|---|---|
+| Compatible con OpenAI | Ollama, LM Studio, servidor de llama.cpp, OpenAI, OpenRouter, Groq | ninguna para servidores locales |
+| Anthropic | Claude (por defecto `claude-opus-5-5`), con el SDK oficial | tu propia API key |
+
+- **Generate**: describe un modelo (modo 3D) o una imagen (modo 2D); el código llega en streaming al editor.
+- **Edit**: describe un cambio al código actual; recibes un diff para aceptar o rechazar (por bloque o completo).
+- **Reparación**: cada respuesta se ejecuta en el sandbox; los errores o un resultado vacío vuelven al modelo, hasta 3 veces.
+- **Visual critique** (modelos con visión): el primer resultado que funciona se renderiza (cuatro vistas, o la imagen) y se le muestra al modelo una vez.
+- **Refine import**: tras importar un GLB, reescribe el código generado como código legible. Los datos grandes de vértices e imágenes se sustituyen por marcadores antes de que el modelo los vea. La reescritura **solo se conserva si** las siluetas siguen coincidiendo con el GLB desde 6 vistas (IoU ≥ 0,95) y los materiales son idénticos.
+
+Privacidad: las peticiones van directo de tu navegador al proveedor, sin ningún servidor de meshcode en medio. La clave se queda en la página de la app, nunca en el sandbox que ejecuta el código. Solo vive en la pestaña, salvo que marques *Remember*, que la guarda en el almacenamiento de este navegador: cualquier página del mismo origen puede leerla, y en github.io eso incluye todos los proyectos de la misma cuenta. Ollama responde tal cual a páginas en `localhost`; para este sitio, arráncalo con `OLLAMA_ORIGINS=<origen del sitio> ollama serve` (el comando exacto aparece en Settings).
+
+Los modelos locales pequeños (≈8B) escriben código 3D simple y a veces incorrecto; los modelos grandes lo hacen mucho mejor. Coincide con los benchmarks publicados que recoge [`research/fuentes.md`](research/fuentes.md).
+
 ## CLI
 
 ```sh
@@ -111,6 +134,12 @@ pnpm meshcode decompile torch.glb -o torch.js        # GLB → código (+ archiv
 pnpm meshcode verify a.glb b.js --min 0.99           # IoU de siluetas + diferencias de materiales entre dos modelos
 pnpm meshcode build examples/2d/adventurer-walk.js -o walk.png   # 2D: la extensión de salida decide PNG / JPG / WebP
 pnpm meshcode build examples/2d/item-icons.svg                    # entra SVG o HTML → sale PNG
+
+# IA opcional (por defecto: Ollama local en http://localhost:11434/v1, primer modelo de la lista)
+pnpm meshcode generate "una silla de madera con asiento tejido" -o silla.js
+pnpm meshcode generate "un ícono de poción de vida de 32×32" --2d --critique --model llava
+pnpm meshcode generate "un cofre del tesoro" --provider anthropic   # ANTHROPIC_API_KEY
+pnpm meshcode decompile modelo.glb --llm -o modelo.js               # reescritura legible, solo si coincide
 ```
 
 `decompile` convierte la geometría que coincide exactamente con una primitiva de three.js (caja, plano, esfera, cilindro, cono) en una llamada a su constructor, y guarda el resto sin pérdida como datos de vértices en base64. Las texturas se escriben junto al módulo con sus bytes originales. Cada decompilación reconstruye el resultado y reporta el **IoU de siluetas** (6 vistas ortográficas, rasterizadas en CPU, deterministas) y las **diferencias de materiales**, porque el IoU por sí solo no detecta errores de sombreado.
@@ -132,7 +161,10 @@ Requiere Node ≥ 22 y **pnpm** (versión fijada en `packageManager`; ejecuta `c
 ```sh
 pnpm install --frozen-lockfile
 pnpm test
+MESHCODE_OLLAMA_MODEL=dolphin3 pnpm test   # además prueba un modelo local real (lento, opcional)
 ```
+
+Los tests de IA usan un servidor simulado con respuestas guionizadas (compatible con OpenAI y con Anthropic), así que son deterministas y no necesitan clave.
 
 No se usa npm. pnpm está configurado en [`pnpm-workspace.yaml`](pnpm-workspace.yaml) para bloquear los scripts de instalación de las dependencias y para ignorar versiones publicadas hace menos de 3 días. Las actions de CI están fijadas por SHA de commit.
 

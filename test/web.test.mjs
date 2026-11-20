@@ -7,6 +7,7 @@ import path from 'node:path';
 import { after, before, test } from 'node:test';
 import validator from 'gltf-validator';
 import { buildFile, inspectGLB, launchChrome, serve } from '../src/browser.mjs';
+import { fakeLLM } from './fake-llm.mjs';
 
 /** @type {Awaited<ReturnType<typeof serve>>} */ let server;
 /** @type {import('playwright-core').Browser} */ let browser;
@@ -158,4 +159,58 @@ test('3D export to Godot and Unity downloads engine source', async () => {
     assert.ok((await readFile(/** @type {string} */ (await dl.path()), 'utf8')).includes(marker));
   }
   await p.close();
+});
+
+test('AI panel: generate (with a repair), reject, edit with a diff, accept; the key stays in the tab', async () => {
+  const fake = await fakeLLM();
+  const p = await context.newPage();
+  try {
+    const fence = (/** @type {string} */ c) => `Sure:\n\`\`\`js\n${c}\`\`\``;
+    const BOX = 'export default (THREE) => new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshStandardMaterial());\n';
+    const TALL = BOX.replace('BoxGeometry()', 'BoxGeometry(1, 3, 1)');
+    const editorCode = () => p.evaluate(() => globalThis.meshcodeEditor.state.doc.toString());
+    await p.goto(server.url);
+    await p.selectOption('#examples', 'torch'); // earlier tests left other drafts in this context
+    await p.waitForFunction(() => document.querySelector('[data-stat="meshes"]')?.textContent !== '–', null, { timeout: 20000 });
+    const torch = await editorCode();
+
+    await p.click('#ai-toggle');
+    await p.click('#ai-settings-open');
+    await p.fill('#ai-base-url', `${fake.url}/v1`);
+    await p.fill('#ai-key', 'sk-local-test');
+    await p.dispatchEvent('#ai-key', 'change');
+    await p.click('#ai-load-models');
+    await p.waitForFunction(() => document.querySelector('#ai-settings-status')?.textContent?.startsWith('1 model:'));
+    assert.equal(await p.inputValue('#ai-model'), 'fake-coder', 'first listed model picked');
+    await p.click('#ai-settings button[value="done"]');
+    assert.deepEqual(await p.evaluate(() => [localStorage.getItem('meshcode:ai-key'), sessionStorage.getItem('meshcode:ai-key')]), [null, 'sk-local-test']);
+
+    fake.replies.push(fence("export default () => { throw new Error('first try'); };\n"), fence(BOX));
+    await p.fill('#ai-prompt', 'a box');
+    await p.press('#ai-prompt', 'Enter');
+    await p.locator('#ai-review').waitFor({ state: 'visible', timeout: 20000 });
+    await p.waitForFunction(() => /done in 2 replies/.test(document.querySelector('#status')?.textContent ?? ''), null, { timeout: 20000 });
+    assert.equal(await editorCode(), BOX);
+    await p.waitForFunction(() => document.querySelector('[data-stat="triangles"]')?.textContent === '12', null, { timeout: 20000 });
+    const chat = fake.requests.filter((r) => r.path.endsWith('/chat/completions'));
+    assert.equal(chat[0].headers.authorization, 'Bearer sk-local-test');
+    assert.match(chat[1].body.messages.at(-1).content, /Error: first try/);
+
+    await p.click('#ai-reject');
+    assert.equal(await editorCode(), torch, 'reject restores the code from before');
+    assert.equal(await p.locator('#ai-review').isHidden(), true);
+
+    fake.replies.push(fence(TALL));
+    await p.fill('#ai-prompt', 'make it tall');
+    await p.click('#ai-edit');
+    await p.locator('#ai-review').waitFor({ state: 'visible', timeout: 20000 });
+    assert.match(fake.requests.at(-1)?.body.messages[1].content, /Current code:[\s\S]*wall torch/i, 'edit sends the current code');
+    assert.ok(await p.locator('.cm-deletedChunk').count() > 0, 'edits show a diff against the previous code');
+    await p.click('#ai-accept');
+    assert.equal(await editorCode(), TALL);
+    assert.equal(await p.locator('.cm-deletedChunk').count(), 0, 'diff closed after accept');
+  } finally {
+    await p.close();
+    await fake.close();
+  }
 });
