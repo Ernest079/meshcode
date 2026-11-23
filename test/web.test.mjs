@@ -285,3 +285,61 @@ export default (T) => {
     await p.close();
   }
 });
+
+test('the code panel docks on any side, resizes, and the layout survives a reload', async () => {
+  const p = await context.newPage();
+  try {
+    await p.goto(server.url);
+    const box = (/** @type {string} */ sel) => /** @type {Promise<{ x: number, y: number, width: number, height: number }>} */ (p.locator(sel).boundingBox());
+    const W = (await box('#workspace')).width;
+
+    // Drag the code title onto the bottom of the workspace: code goes below the preview.
+    const ws = await box('#workspace');
+    await p.locator('[data-panel="code"]').dragTo(p.locator('#workspace'), { targetPosition: { x: ws.width / 2, y: ws.height - 10 } });
+    assert.equal(await p.locator('#workspace').getAttribute('data-code'), 'bottom');
+    assert.ok((await box('#code-panel')).y > (await box('#viewer')).y, 'code below the preview');
+
+    // Dragging the preview to the left sends the code right.
+    await p.locator('[data-panel="preview"]').dragTo(p.locator('#workspace'), { targetPosition: { x: 10, y: ws.height / 2 } });
+    assert.equal(await p.locator('#layout').inputValue(), 'right');
+    assert.ok((await box('#code-panel')).x > (await box('#viewer')).x, 'code right of the preview');
+
+    // Keyboard resize: the divider follows the arrow, so ArrowLeft grows a right-hand code panel.
+    const before = (await box('#code-panel')).width;
+    await p.locator('#splitter').press('ArrowLeft');
+    assert.ok((await box('#code-panel')).width > before + W * 0.04);
+
+    await p.selectOption('#layout', 'top');
+    await p.reload();
+    assert.equal(await p.locator('#workspace').getAttribute('data-code'), 'top');
+    assert.equal(await p.locator('#splitter').getAttribute('aria-valuenow'), '55');
+  } finally {
+    await p.evaluate(() => { localStorage.removeItem('meshcode:layout'); localStorage.removeItem('meshcode:split'); });
+    await p.close();
+  }
+});
+
+test('animate export: the preview plays it and the exported GLB carries it', async () => {
+  const p = await context.newPage();
+  try {
+    await p.goto(server.url);
+    await p.selectOption('#examples', 'chest'); // runs as soon as the viewer is ready
+    const viewer = /** @type {import('playwright-core').Frame} */ (p.frames().find((f) => f !== p.mainFrame()));
+    const hingeX = () => viewer.evaluate(() => globalThis.meshcodeViewer.current()?.getObjectByName('lid_hinge')?.rotation.x ?? null);
+    await viewer.waitForFunction(() => globalThis.meshcodeViewer.current()?.getObjectByName('lid_hinge'), null, { timeout: 20000 });
+    const a = await hingeX();
+    await p.waitForTimeout(300);
+    assert.notEqual(await hingeX(), a, 'the lid moves in the preview');
+
+    const [download] = await Promise.all([p.waitForEvent('download'), p.click('#export')]);
+    const report = await validator.validateBytes(new Uint8Array(await readFile(/** @type {string} */ (await download.path()))));
+    assert.equal(report.issues.numErrors, 0);
+    assert.equal(report.info.animationCount, 1);
+
+    // Bad animation exports surface in the error box, like any other model error.
+    await p.evaluate(() => globalThis.meshcodeEditor.dispatch({ changes: { from: 0, insert: 'export const fps = 0.5;\n' } }));
+    await p.locator('#error').filter({ hasText: '`fps` must be a whole number from 1 to 120, got 0.5' }).waitFor({ timeout: 20000 });
+  } finally {
+    await p.close();
+  }
+});

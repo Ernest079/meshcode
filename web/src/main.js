@@ -346,6 +346,96 @@ document.addEventListener('dragleave', (e) => {
   if (!e.relatedTarget) viewer.classList.remove('pointer-events-none');
 });
 
+// ------------------------------------------------------------------ layout: code panel on any side, resizable
+
+/** @typedef {'left' | 'right' | 'top' | 'bottom'} Side */
+/** @type {Record<Side, Side>} */
+const OPPOSITE = { left: 'right', right: 'left', top: 'bottom', bottom: 'top' };
+const LAYOUT_KEY = 'meshcode:layout';
+const SPLIT_KEY = 'meshcode:split';
+const workspace = $('#workspace');
+const codePanel = $('#code-panel');
+const splitter = $('#splitter');
+const layoutSelect = /** @type {HTMLSelectElement} */ ($('#layout'));
+const dockHint = $('#dock-hint');
+const codeSide = () => /** @type {Side} */ (workspace.dataset.code);
+
+/** @param {Side} side */
+function setLayout(side) {
+  workspace.dataset.code = side;
+  layoutSelect.value = side;
+  splitter.setAttribute('aria-orientation', side === 'left' || side === 'right' ? 'vertical' : 'horizontal');
+  store.set(LAYOUT_KEY, side);
+}
+let split = 0.5; // share of the workspace taken by the code panel
+/** @param {number} f */
+function setSplit(f) {
+  split = Math.min(0.85, Math.max(0.15, f));
+  codePanel.style.flexBasis = `${split * 100}%`;
+  splitter.setAttribute('aria-valuenow', String(Math.round(split * 100)));
+}
+const savedSide = store.get(LAYOUT_KEY);
+setLayout(savedSide && savedSide in OPPOSITE ? /** @type {Side} */ (savedSide) : matchMedia('(min-width: 48rem)').matches ? 'left' : 'top');
+setSplit(Number(store.get(SPLIT_KEY)) || 0.5);
+layoutSelect.addEventListener('change', () => setLayout(/** @type {Side} */ (layoutSelect.value)));
+
+// Splitter: drag with mouse/touch, or arrow keys when focused. The frame would swallow the pointer, so it ignores it meanwhile.
+splitter.addEventListener('pointerdown', (e) => {
+  splitter.setPointerCapture(e.pointerId);
+  viewer.classList.add('pointer-events-none');
+});
+splitter.addEventListener('pointermove', (e) => {
+  if (!splitter.hasPointerCapture(e.pointerId)) return;
+  const r = workspace.getBoundingClientRect();
+  const x = e.clientX, y = e.clientY;
+  setSplit({ left: (x - r.left) / r.width, right: (r.right - x) / r.width, top: (y - r.top) / r.height, bottom: (r.bottom - y) / r.height }[codeSide()]);
+});
+splitter.addEventListener('lostpointercapture', () => {
+  viewer.classList.remove('pointer-events-none');
+  store.set(SPLIT_KEY, String(split));
+});
+splitter.addEventListener('keydown', (e) => {
+  const step = { ArrowLeft: -0.05, ArrowUp: -0.05, ArrowRight: 0.05, ArrowDown: 0.05 }[e.key];
+  if (!step) return;
+  e.preventDefault();
+  setSplit(split + (codeSide() === 'right' || codeSide() === 'bottom' ? -step : step)); // the divider follows the arrow
+  store.set(SPLIT_KEY, String(split));
+});
+
+// Drag a panel's title onto the workspace: the half nearest the pointer is where that panel goes.
+let draggedPanel = ''; // 'code' | 'preview' while a title is dragged
+/** @param {DragEvent} e @returns {Side} */
+function sideAt(e) {
+  const r = workspace.getBoundingClientRect();
+  const dx = (e.clientX - r.left) / r.width - 0.5, dy = (e.clientY - r.top) / r.height - 0.5;
+  return Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : dy < 0 ? 'top' : 'bottom';
+}
+const HINT_INSET = { left: '0 50% 0 0', right: '0 0 0 50%', top: '0 0 50% 0', bottom: '50% 0 0 0' };
+for (const grip of document.querySelectorAll('[data-panel]')) {
+  grip.addEventListener('dragstart', (e) => {
+    draggedPanel = /** @type {HTMLElement} */ (grip).dataset.panel ?? '';
+    /** @type {DragEvent} */ (e).dataTransfer?.setData('application/x-meshcode-panel', draggedPanel); // Firefox needs data to start a drag; not text, or the editor would paste it
+  });
+  grip.addEventListener('dragend', () => {
+    draggedPanel = '';
+    dockHint.hidden = true;
+    viewer.classList.remove('pointer-events-none');
+  });
+}
+workspace.addEventListener('dragover', (e) => {
+  if (!draggedPanel) return;
+  dockHint.style.inset = HINT_INSET[sideAt(e)];
+  dockHint.hidden = false;
+});
+workspace.addEventListener('dragleave', (e) => {
+  if (!workspace.contains(/** @type {Node | null} */ (e.relatedTarget))) dockHint.hidden = true;
+});
+workspace.addEventListener('drop', (e) => {
+  if (!draggedPanel) return;
+  const side = sideAt(e);
+  setLayout(draggedPanel === 'code' ? side : OPPOSITE[side]);
+});
+
 // ------------------------------------------------------------------ optional AI (web/src/ai.js, loaded on first open)
 
 /** What ai.js may touch. */

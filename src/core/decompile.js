@@ -200,7 +200,8 @@ export async function decompile(scene, opts = {}) {
   /** @type {Record<string, number>} */
   const summary = {};
   /** @type {string[]} */
-  const warnings = [];
+  // ponytail: animations are not turned into code yet; emit an `animate` export from the clips if needed.
+  const warnings = scene.animations.length ? [`${scene.animations.length} animation(s) dropped: not converted to code yet`] : [];
   /** @type {string[]} */ const matLines = [];
   /** @type {string[]} */ const sceneLines = [];
   /** @type {string[]} */ const dataLines = [];

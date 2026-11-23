@@ -43,7 +43,8 @@ for (const model of MODELS) {
       if (r.meshes[i].kind === 'data') assert.equal(have.triangles, want.triangles, `${at}: triangles`);
       else assert.ok(have.triangles >= want.triangles, `${at}: primitive has fewer triangles`);
     });
-    assert.deepEqual(r.warnings, []);
+    // Animations only travel in the GLB: the script says so instead of dropping them silently.
+    assert.deepEqual(r.warnings, model === 'examples/chest.js' ? ['1 animation(s) not included here: export GLB, which Godot and Unity import with its animations'] : []);
   });
 }
 

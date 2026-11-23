@@ -1,0 +1,935 @@
+{
+  "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "reps": 5,
+  "results": {
+    "code": {
+      "reps": [
+        {
+          "start": 58.5,
+          "assets": 143.10000000009313,
+          "world": 148.70000000018626,
+          "compiled": 234.5,
+          "first-frame": 275.70000000018626,
+          "downloaded": 0,
+          "heap": 13896585,
+          "generate": {
+            "arena": 52.60000000009313,
+            "crate": 11.700000000186265,
+            "barrel": 2.6999999997206032,
+            "drone": 1.8999999999068677,
+            "bolt": 0.39999999990686774,
+            "layout": 1.8000000002793968
+          }
+        },
+        {
+          "start": 32.09999999962747,
+          "assets": 104.89999999990687,
+          "world": 108.09999999962747,
+          "compiled": 137.5,
+          "first-frame": 256.29999999981374,
+          "downloaded": 0,
+          "heap": 14258489,
+          "generate": {
+            "arena": 48.09999999962747,
+            "crate": 9.300000000279397,
+            "barrel": 2,
+            "drone": 1.3999999999068677,
+            "bolt": 0.5,
+            "layout": 1
+          }
+        },
+        {
+          "start": 29.600000000093132,
+          "assets": 101.20000000018626,
+          "world": 104,
+          "compiled": 131.79999999981374,
+          "first-frame": 246.89999999990687,
+          "downloaded": 0,
+          "heap": 14277457,
+          "generate": {
+            "arena": 48,
+            "crate": 9.200000000186265,
+            "barrel": 1.8999999999068677,
+            "drone": 1.3000000002793968,
+            "bolt": 0.39999999990686774,
+            "layout": 1.1000000000931323
+          }
+        },
+        {
+          "start": 33.6999999997206,
+          "assets": 104.89999999990687,
+          "world": 107.5,
+          "compiled": 136.89999999990687,
+          "first-frame": 258.29999999981374,
+          "downloaded": 0,
+          "heap": 14327181,
+          "generate": {
+            "arena": 48.60000000009313,
+            "crate": 9.399999999906868,
+            "barrel": 2.2000000001862645,
+            "drone": 1.1999999997206032,
+            "bolt": 0.6000000000931323,
+            "layout": 0.8999999999068677
+          }
+        },
+        {
+          "start": 29.399999999906868,
+          "assets": 99.20000000018626,
+          "world": 101.89999999990687,
+          "compiled": 132.39999999990687,
+          "first-frame": 251.3000000002794,
+          "downloaded": 0,
+          "heap": 14240261,
+          "generate": {
+            "arena": 47.299999999813735,
+            "crate": 8.799999999813735,
+            "barrel": 1.900000000372529,
+            "drone": 1.2999999998137355,
+            "bolt": 0.5,
+            "layout": 1.1000000000931323
+          }
+        }
+      ],
+      "files": [
+        "code.html",
+        "assets/code-BlpCkICQ.js",
+        "assets/game-PAlvumF7.js"
+      ],
+      "render": {
+        "calls": 80,
+        "triangles": 815852,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 26,
+        "textures": 5,
+        "geometryBytes": 430216,
+        "textureBytes": 9961472,
+        "compressedFormats": []
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 763537,
+            "gzip": 194673,
+            "br": 157641
+          }
+        },
+        "total": {
+          "raw": 763537,
+          "gzip": 194673,
+          "br": 157641
+        },
+        "requests": 3
+      }
+    },
+    "hybrid?tex=uastc": {
+      "reps": [
+        {
+          "start": 33.60000000009313,
+          "assets": 309.39999999990687,
+          "world": 313.39999999990687,
+          "compiled": 333.89999999990687,
+          "first-frame": 447.10000000009313,
+          "downloaded": 82.8000000002794,
+          "heap": 15306676
+        },
+        {
+          "start": 34,
+          "assets": 310.5,
+          "world": 313.1999999997206,
+          "compiled": 334.89999999990687,
+          "first-frame": 444.39999999990687,
+          "downloaded": 96.1999999997206,
+          "heap": 15320828
+        },
+        {
+          "start": 31.5,
+          "assets": 265.09999999962747,
+          "world": 268.39999999990687,
+          "compiled": 290.39999999990687,
+          "first-frame": 405.09999999962747,
+          "downloaded": 69.39999999990687,
+          "heap": 15199556
+        },
+        {
+          "start": 34,
+          "assets": 268.89999999990687,
+          "world": 271.70000000018626,
+          "compiled": 303,
+          "first-frame": 451.10000000009313,
+          "downloaded": 63.200000000186265,
+          "heap": 15408452
+        },
+        {
+          "start": 32.299999999813735,
+          "assets": 297.79999999981374,
+          "world": 300.6999999997206,
+          "compiled": 321.09999999962747,
+          "first-frame": 430.29999999981374,
+          "downloaded": 58.799999999813735,
+          "heap": 15253048
+        }
+      ],
+      "files": [
+        "hybrid.html",
+        "assets/hybrid-oEj2NHrV.js",
+        "assets/assets-CUPaTCFI.js",
+        "assets/game-PAlvumF7.js",
+        "assets/KTX2Loader-IKxT79Zu.js",
+        "assets/uastc/barrel.glb",
+        "assets/uastc/drone.glb",
+        "assets/uastc/crate.glb",
+        "assets/uastc/bolt.glb",
+        "assets/uastc/arena.glb",
+        "assets/basis_transcoder-o4Hde_L7.js",
+        "assets/basis_transcoder-VXdx5NbI.wasm"
+      ],
+      "render": {
+        "calls": 80,
+        "triangles": 815852,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 19,
+        "textures": 5,
+        "geometryBytes": 337384,
+        "textureBytes": 2490576,
+        "compressedFormats": [
+          "BC7"
+        ]
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 1476431,
+            "gzip": 501173,
+            "br": 412753
+          },
+          "models": {
+            "raw": 2002048,
+            "gzip": 1918991,
+            "br": 1911384
+          }
+        },
+        "total": {
+          "raw": 3478479,
+          "gzip": 2420164,
+          "br": 2324137
+        },
+        "requests": 12
+      }
+    },
+    "hybrid?tex=etc1s": {
+      "reps": [
+        {
+          "start": 40.89999999990687,
+          "assets": 286.70000000018626,
+          "world": 290.70000000018626,
+          "compiled": 312.39999999990687,
+          "first-frame": 457.60000000009313,
+          "downloaded": 69.5,
+          "heap": 12480740
+        },
+        {
+          "start": 39.6999999997206,
+          "assets": 267.1999999997206,
+          "world": 271.6999999997206,
+          "compiled": 296.5,
+          "first-frame": 405.89999999990687,
+          "downloaded": 77.59999999962747,
+          "heap": 11900948
+        },
+        {
+          "start": 29.700000000186265,
+          "assets": 251.70000000018626,
+          "world": 254.5,
+          "compiled": 277.20000000018626,
+          "first-frame": 397.5,
+          "downloaded": 52.90000000037253,
+          "heap": 11863352
+        },
+        {
+          "start": 31.199999999720603,
+          "assets": 268.29999999981374,
+          "world": 271.1999999997206,
+          "compiled": 293,
+          "first-frame": 411.39999999990687,
+          "downloaded": 54,
+          "heap": 11856984
+        },
+        {
+          "start": 31,
+          "assets": 274.5,
+          "world": 278.29999999981374,
+          "compiled": 300.1999999997206,
+          "first-frame": 430.1999999997206,
+          "downloaded": 68.89999999990687,
+          "heap": 11917292
+        }
+      ],
+      "files": [
+        "hybrid.html",
+        "assets/hybrid-oEj2NHrV.js",
+        "assets/assets-CUPaTCFI.js",
+        "assets/game-PAlvumF7.js",
+        "assets/KTX2Loader-IKxT79Zu.js",
+        "assets/etc1s/crate.glb",
+        "assets/etc1s/arena.glb",
+        "assets/etc1s/barrel.glb",
+        "assets/etc1s/drone.glb",
+        "assets/etc1s/bolt.glb",
+        "assets/basis_transcoder-o4Hde_L7.js",
+        "assets/basis_transcoder-VXdx5NbI.wasm"
+      ],
+      "render": {
+        "calls": 80,
+        "triangles": 815852,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 19,
+        "textures": 5,
+        "geometryBytes": 337384,
+        "textureBytes": 2490576,
+        "compressedFormats": [
+          "BC7"
+        ]
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 1476431,
+            "gzip": 501173,
+            "br": 412753
+          },
+          "models": {
+            "raw": 362812,
+            "gzip": 293477,
+            "br": 288370
+          }
+        },
+        "total": {
+          "raw": 1839243,
+          "gzip": 794650,
+          "br": 701123
+        },
+        "requests": 12
+      }
+    },
+    "hybrid?tex=webp": {
+      "reps": [
+        {
+          "start": 33.5,
+          "assets": 105.1999999997206,
+          "world": 108,
+          "compiled": 129.5,
+          "first-frame": 254.09999999962747,
+          "downloaded": 49.1999999997206,
+          "heap": 9252063
+        },
+        {
+          "start": 32.89999999990687,
+          "assets": 105.39999999990687,
+          "world": 108.3000000002794,
+          "compiled": 133.8000000002794,
+          "first-frame": 259.60000000009313,
+          "downloaded": 48,
+          "heap": 9090215
+        },
+        {
+          "start": 33.700000000186265,
+          "assets": 110.5,
+          "world": 114.20000000018626,
+          "compiled": 135.60000000009313,
+          "first-frame": 258.5,
+          "downloaded": 49.3000000002794,
+          "heap": 9235419
+        },
+        {
+          "start": 32.700000000186265,
+          "assets": 106.60000000009313,
+          "world": 109.39999999990687,
+          "compiled": 130.89999999990687,
+          "first-frame": 247.10000000009313,
+          "downloaded": 50,
+          "heap": 9046575
+        },
+        {
+          "start": 34.3000000002794,
+          "assets": 106.5,
+          "world": 109.40000000037253,
+          "compiled": 130.3000000002794,
+          "first-frame": 248.40000000037253,
+          "downloaded": 52.10000000009313,
+          "heap": 9136815
+        }
+      ],
+      "files": [
+        "hybrid.html",
+        "assets/hybrid-oEj2NHrV.js",
+        "assets/assets-CUPaTCFI.js",
+        "assets/game-PAlvumF7.js",
+        "assets/webp/arena.glb",
+        "assets/webp/barrel.glb",
+        "assets/webp/crate.glb",
+        "assets/webp/drone.glb",
+        "assets/webp/bolt.glb"
+      ],
+      "render": {
+        "calls": 80,
+        "triangles": 815852,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 19,
+        "textures": 5,
+        "geometryBytes": 337384,
+        "textureBytes": 9961472,
+        "compressedFormats": []
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 832132,
+            "gzip": 214288,
+            "br": 174708
+          },
+          "models": {
+            "raw": 642248,
+            "gzip": 574437,
+            "br": 569146
+          }
+        },
+        "total": {
+          "raw": 1474380,
+          "gzip": 788725,
+          "br": 743854
+        },
+        "requests": 9
+      }
+    },
+    "hybrid?tex=png": {
+      "reps": [
+        {
+          "start": 35.10000000009313,
+          "assets": 114.70000000018626,
+          "world": 117.29999999981374,
+          "compiled": 142.20000000018626,
+          "first-frame": 264.89999999990687,
+          "downloaded": 70.60000000009313,
+          "heap": 16127432
+        },
+        {
+          "start": 38,
+          "assets": 123.8000000002794,
+          "world": 127,
+          "compiled": 148.5,
+          "first-frame": 273.3000000002794,
+          "downloaded": 60.200000000186265,
+          "heap": 16129120
+        },
+        {
+          "start": 33.89999999990687,
+          "assets": 111.6999999997206,
+          "world": 114.6999999997206,
+          "compiled": 137.10000000009313,
+          "first-frame": 264.39999999990687,
+          "downloaded": 67.79999999981374,
+          "heap": 16129312
+        },
+        {
+          "start": 38.5,
+          "assets": 122.5,
+          "world": 125.29999999981374,
+          "compiled": 148.5,
+          "first-frame": 265.60000000009313,
+          "downloaded": 65.70000000018626,
+          "heap": 18348232
+        },
+        {
+          "start": 34.89999999990687,
+          "assets": 118.89999999990687,
+          "world": 122.39999999990687,
+          "compiled": 151.1999999997206,
+          "first-frame": 274.39999999990687,
+          "downloaded": 56.60000000009313,
+          "heap": 18348968
+        }
+      ],
+      "files": [
+        "hybrid.html",
+        "assets/hybrid-oEj2NHrV.js",
+        "assets/assets-CUPaTCFI.js",
+        "assets/game-PAlvumF7.js",
+        "assets/png/barrel.glb",
+        "assets/png/drone.glb",
+        "assets/png/crate.glb",
+        "assets/png/bolt.glb",
+        "assets/png/arena.glb"
+      ],
+      "render": {
+        "calls": 80,
+        "triangles": 815852,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 19,
+        "textures": 5,
+        "geometryBytes": 337384,
+        "textureBytes": 9961472,
+        "compressedFormats": []
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 832132,
+            "gzip": 214288,
+            "br": 174708
+          },
+          "models": {
+            "raw": 2957664,
+            "gzip": 2869152,
+            "br": 2832600
+          }
+        },
+        "total": {
+          "raw": 3789796,
+          "gzip": 3083440,
+          "br": 3007308
+        },
+        "requests": 9
+      }
+    },
+    "files?tex=uastc": {
+      "reps": [
+        {
+          "start": 31.700000000186265,
+          "assets": 259.70000000018626,
+          "world": 262.89999999990687,
+          "compiled": 284.20000000018626,
+          "first-frame": 394.70000000018626,
+          "downloaded": 58.3000000002794,
+          "heap": 16813628
+        },
+        {
+          "start": 34.89999999990687,
+          "assets": 253.89999999990687,
+          "world": 257.1999999997206,
+          "compiled": 279.29999999981374,
+          "first-frame": 408.5,
+          "downloaded": 60,
+          "heap": 16586712
+        },
+        {
+          "start": 51.700000000186265,
+          "assets": 364.5,
+          "world": 368.10000000009313,
+          "compiled": 390.5,
+          "first-frame": 511.20000000018626,
+          "downloaded": 126.20000000018626,
+          "heap": 16420832
+        },
+        {
+          "start": 29.899999999906868,
+          "assets": 273.70000000018626,
+          "world": 276.70000000018626,
+          "compiled": 298.70000000018626,
+          "first-frame": 410.5,
+          "downloaded": 74.5,
+          "heap": 16579996
+        },
+        {
+          "start": 31.899999999906868,
+          "assets": 284,
+          "world": 287.89999999990687,
+          "compiled": 311.29999999981374,
+          "first-frame": 435.5,
+          "downloaded": 58,
+          "heap": 16488480
+        }
+      ],
+      "files": [
+        "files.html",
+        "assets/files-DmHHJ_IZ.js",
+        "assets/assets-CUPaTCFI.js",
+        "assets/game-PAlvumF7.js",
+        "assets/layout.json",
+        "assets/KTX2Loader-IKxT79Zu.js",
+        "assets/uastc/barrel.glb",
+        "assets/uastc/drone.glb",
+        "assets/uastc/crate.glb",
+        "assets/uastc/bolt.glb",
+        "assets/uastc/explosion.ktx2",
+        "assets/uastc/arena.glb",
+        "assets/uastc/spark.ktx2",
+        "assets/basis_transcoder-o4Hde_L7.js",
+        "assets/basis_transcoder-VXdx5NbI.wasm"
+      ],
+      "render": {
+        "calls": 80,
+        "triangles": 815852,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 19,
+        "textures": 7,
+        "geometryBytes": 337384,
+        "textureBytes": 3543248,
+        "compressedFormats": [
+          "BC7"
+        ]
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 1476497,
+            "gzip": 501214,
+            "br": 412791
+          },
+          "layout": {
+            "raw": 23744,
+            "gzip": 8823,
+            "br": 7258
+          },
+          "models": {
+            "raw": 2002048,
+            "gzip": 1918991,
+            "br": 1911384
+          },
+          "effects": {
+            "raw": 286362,
+            "gzip": 286258,
+            "br": 286311
+          }
+        },
+        "total": {
+          "raw": 3788651,
+          "gzip": 2715286,
+          "br": 2617744
+        },
+        "requests": 15
+      }
+    },
+    "files?tex=etc1s": {
+      "reps": [
+        {
+          "start": 35.5,
+          "assets": 291.79999999981374,
+          "world": 295.1999999997206,
+          "compiled": 318.09999999962747,
+          "first-frame": 430.39999999990687,
+          "downloaded": 60.59999999962747,
+          "heap": 13126897
+        },
+        {
+          "start": 33.5,
+          "assets": 239.5,
+          "world": 242.60000000009313,
+          "compiled": 263.89999999990687,
+          "first-frame": 374,
+          "downloaded": 57.10000000009313,
+          "heap": 13151793
+        },
+        {
+          "start": 34.39999999990687,
+          "assets": 303.39999999990687,
+          "world": 306.79999999981374,
+          "compiled": 329.79999999981374,
+          "first-frame": 449.6999999997206,
+          "downloaded": 62.299999999813735,
+          "heap": 13060337
+        },
+        {
+          "start": 36.1999999997206,
+          "assets": 248.29999999981374,
+          "world": 251.39999999990687,
+          "compiled": 273.6999999997206,
+          "first-frame": 399.1999999997206,
+          "downloaded": 75.89999999990687,
+          "heap": 13113349
+        },
+        {
+          "start": 28.899999999906868,
+          "assets": 256.10000000009313,
+          "world": 259,
+          "compiled": 280.3000000002794,
+          "first-frame": 405.10000000009313,
+          "downloaded": 65.3000000002794,
+          "heap": 13152661
+        }
+      ],
+      "files": [
+        "files.html",
+        "assets/files-DmHHJ_IZ.js",
+        "assets/assets-CUPaTCFI.js",
+        "assets/game-PAlvumF7.js",
+        "assets/layout.json",
+        "assets/KTX2Loader-IKxT79Zu.js",
+        "assets/etc1s/arena.glb",
+        "assets/etc1s/crate.glb",
+        "assets/etc1s/barrel.glb",
+        "assets/etc1s/drone.glb",
+        "assets/etc1s/bolt.glb",
+        "assets/etc1s/explosion.ktx2",
+        "assets/etc1s/spark.ktx2",
+        "assets/basis_transcoder-o4Hde_L7.js",
+        "assets/basis_transcoder-VXdx5NbI.wasm"
+      ],
+      "render": {
+        "calls": 80,
+        "triangles": 815852,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 19,
+        "textures": 7,
+        "geometryBytes": 337384,
+        "textureBytes": 3543248,
+        "compressedFormats": [
+          "BC7"
+        ]
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 1476497,
+            "gzip": 501214,
+            "br": 412791
+          },
+          "layout": {
+            "raw": 23744,
+            "gzip": 8823,
+            "br": 7258
+          },
+          "models": {
+            "raw": 362812,
+            "gzip": 293477,
+            "br": 288370
+          },
+          "effects": {
+            "raw": 74403,
+            "gzip": 74261,
+            "br": 74313
+          }
+        },
+        "total": {
+          "raw": 1937456,
+          "gzip": 877775,
+          "br": 782732
+        },
+        "requests": 15
+      }
+    },
+    "files?tex=webp": {
+      "reps": [
+        {
+          "start": 38.700000000186265,
+          "assets": 116.60000000009313,
+          "world": 119.60000000009313,
+          "compiled": 141.39999999990687,
+          "first-frame": 273,
+          "downloaded": 61.8000000002794,
+          "heap": 9364973
+        },
+        {
+          "start": 33,
+          "assets": 106.10000000009313,
+          "world": 109.60000000009313,
+          "compiled": 131.89999999990687,
+          "first-frame": 255.39999999990687,
+          "downloaded": 50.8000000002794,
+          "heap": 9387597
+        },
+        {
+          "start": 45.59999999962747,
+          "assets": 126.59999999962747,
+          "world": 130.09999999962747,
+          "compiled": 151.59999999962747,
+          "first-frame": 277.1999999997206,
+          "downloaded": 66.79999999981374,
+          "heap": 9159189
+        },
+        {
+          "start": 35,
+          "assets": 115.90000000037253,
+          "world": 119,
+          "compiled": 141,
+          "first-frame": 260.60000000009313,
+          "downloaded": 53.8000000002794,
+          "heap": 9259265
+        },
+        {
+          "start": 34.1999999997206,
+          "assets": 105.89999999990687,
+          "world": 108.89999999990687,
+          "compiled": 130.60000000009313,
+          "first-frame": 245.60000000009313,
+          "downloaded": 52.1999999997206,
+          "heap": 9113529
+        }
+      ],
+      "files": [
+        "files.html",
+        "assets/files-DmHHJ_IZ.js",
+        "assets/assets-CUPaTCFI.js",
+        "assets/game-PAlvumF7.js",
+        "assets/webp/arena.glb",
+        "assets/webp/crate.glb",
+        "assets/webp/barrel.glb",
+        "assets/webp/bolt.glb",
+        "assets/webp/drone.glb",
+        "assets/layout.json",
+        "assets/webp/explosion.webp",
+        "assets/webp/spark.webp"
+      ],
+      "render": {
+        "calls": 80,
+        "triangles": 815852,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 19,
+        "textures": 7,
+        "geometryBytes": 337384,
+        "textureBytes": 14172160,
+        "compressedFormats": []
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 832198,
+            "gzip": 214329,
+            "br": 174746
+          },
+          "models": {
+            "raw": 642248,
+            "gzip": 574437,
+            "br": 569146
+          },
+          "layout": {
+            "raw": 23744,
+            "gzip": 8823,
+            "br": 7258
+          },
+          "effects": {
+            "raw": 181424,
+            "gzip": 180186,
+            "br": 181217
+          }
+        },
+        "total": {
+          "raw": 1679614,
+          "gzip": 977775,
+          "br": 932367
+        },
+        "requests": 12
+      }
+    },
+    "files?tex=png": {
+      "reps": [
+        {
+          "start": 32.60000000009313,
+          "assets": 119.29999999981374,
+          "world": 123.29999999981374,
+          "compiled": 145.10000000009313,
+          "first-frame": 278.20000000018626,
+          "downloaded": 69,
+          "heap": 16067390
+        },
+        {
+          "start": 39.5,
+          "assets": 129.89999999990687,
+          "world": 133.09999999962747,
+          "compiled": 155.59999999962747,
+          "first-frame": 342,
+          "downloaded": 79.29999999981374,
+          "heap": 16191002
+        },
+        {
+          "start": 38.89999999990687,
+          "assets": 131.3000000002794,
+          "world": 134.89999999990687,
+          "compiled": 162.89999999990687,
+          "first-frame": 292.89999999990687,
+          "downloaded": 81.20000000018626,
+          "heap": 15527062
+        },
+        {
+          "start": 31.699999999720603,
+          "assets": 125,
+          "world": 128.79999999981374,
+          "compiled": 150.1999999997206,
+          "first-frame": 279,
+          "downloaded": 55.09999999962747,
+          "heap": 16440634
+        },
+        {
+          "start": 34.799999999813735,
+          "assets": 123.39999999990687,
+          "world": 126.79999999981374,
+          "compiled": 148,
+          "first-frame": 265,
+          "downloaded": 77.5,
+          "heap": 16165058
+        }
+      ],
+      "files": [
+        "files.html",
+        "assets/files-DmHHJ_IZ.js",
+        "assets/assets-CUPaTCFI.js",
+        "assets/game-PAlvumF7.js",
+        "assets/png/crate.glb",
+        "assets/png/barrel.glb",
+        "assets/png/drone.glb",
+        "assets/png/bolt.glb",
+        "assets/png/spark.png",
+        "assets/layout.json",
+        "assets/png/arena.glb",
+        "assets/png/explosion.png"
+      ],
+      "render": {
+        "calls": 80,
+        "triangles": 815852,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 19,
+        "textures": 7,
+        "geometryBytes": 337384,
+        "textureBytes": 14172160,
+        "compressedFormats": []
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 832198,
+            "gzip": 214329,
+            "br": 174746
+          },
+          "models": {
+            "raw": 2957664,
+            "gzip": 2869152,
+            "br": 2832600
+          },
+          "effects": {
+            "raw": 627083,
+            "gzip": 619071,
+            "br": 616949
+          },
+          "layout": {
+            "raw": 23744,
+            "gzip": 8823,
+            "br": 7258
+          }
+        },
+        "total": {
+          "raw": 4440689,
+          "gzip": 3711375,
+          "br": 3631553
+        },
+        "requests": 12
+      }
+    }
+  }
+}

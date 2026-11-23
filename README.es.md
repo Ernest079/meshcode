@@ -34,6 +34,7 @@ meshcode incluye además un benchmark abierto que responde una pregunta: **¿es 
 - [x] 3.9. IA opcional: modelos locales o tu propia API key (generar, reparar, refinar importaciones)
 - [x] 3.10. GIF de demostración en el README
 - [x] 3.11. Modelo ↔ código: clic en una pieza para seleccionar su código, cursor para resaltar piezas
+- [x] 3.12. Animación 3D desde código (piezas rígidas → keyframes en el GLB)
 - [ ] 4. Juego de prueba en tres variantes (estudio controlado + estudio con assets reales)
 - [ ] 5. Arnés de medición (escritorio + Android)
 - [ ] 6. Análisis, gráficos, release + DOI
@@ -52,6 +53,21 @@ Tu código se ejecuta en un iframe aislado (origen opaco), así que un enlace co
 pnpm dev       # http://localhost:5173
 pnpm build     # → dist/
 ```
+
+### Animación: piezas que se mueven desde código
+
+Añade un export `animate` para mover, rotar o escalar piezas en el tiempo. meshcode lo muestrea (`fps`, 30 por defecto) en keyframes: el visor los reproduce en bucle y **Export GLB** (y `meshcode build`) los escribe como animación glTF, que Blender, Godot, Unity y Unreal importan.
+
+```js
+export const duration = 3; // segundos
+export const animate = (root, t) => {
+  // valores absolutos a partir de t (sin `+=`); busca las piezas por nombre. t = 0 es la pose de reposo.
+  root.getObjectByName('lid_hinge').rotation.x = -1.1 * (0.5 + 0.5 * Math.cos((2 * Math.PI * t) / duration));
+};
+export default (THREE) => { /* … */ };
+```
+
+Solo se animan posición/rotación/escala de los nodos (sin esqueletos, ni por instancia, ni materiales). Los scripts de Godot/Unity no llevan la animación: exporta GLB para eso. Las animaciones de un GLB importado aún no se convierten en código.
 
 ### Modo 2D: imágenes desde código
 
@@ -72,7 +88,7 @@ Modelos originales en [`examples/`](examples/), cada uno muestra una técnica (t
 | Ejemplo | Técnicas |
 |---|---|
 | `torch.js` | perfiles con LatheGeometry, anillos torus, texturas de canvas, llama en capas sin iluminación, PointLight, brasas instanciadas |
-| `chest.js` | tapa de medio cilindro sobre un pivote (lista para animar), arcos torus, pila de 90 monedas con InstancedMesh |
+| `chest.js` | tapa de medio cilindro sobre un pivote, animada con `animate` (se abre y se cierra), arcos torus, pila de 90 monedas con InstancedMesh |
 | `barrel.js` | una sola función de perfil define el cuerpo torneado *y* los aros, textura de duelas que se repite |
 | `forest.js` | PRNG con semilla (cambia `SEED`), muestreo por rechazo, terreno desplazado, 265 instancias en 5 draw calls |
 | `spaceship.js` | fuselaje torneado, alas extruidas desde un `Shape` 2D, brillo de motores sin iluminación (frente = −Z) |

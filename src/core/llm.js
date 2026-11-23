@@ -19,6 +19,10 @@ export const SYSTEM = {
   '3d': `You write 3D game models as JavaScript modules for meshcode (three.js r187).
 Contract: the default export receives the THREE namespace and returns a THREE.Object3D (it may be async):
   export default (THREE) => { const root = new THREE.Group(); /* … */ return root; };
+Optional animation of rigid parts (only when asked): sampled into keyframes and exported in the GLB.
+  export const duration = 2; // seconds, loops
+  export const animate = (root, t) => { root.getObjectByName('lid').rotation.x = -Math.sin((Math.PI * t) / duration); };
+  animate sets absolute position/rotation/scale from t (no increments); find parts by name; t = 0 is the rest pose.
 Rules:
 - No imports and no network: use only the THREE argument. Textures are drawn on a canvas (document.createElement('canvas')) and wrapped in THREE.CanvasTexture; set colorSpace = THREE.SRGBColorSpace on colour maps.
 - Metres, Y up; the model stands on y = 0, centred on x and z. Give each part a mesh.name.

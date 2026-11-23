@@ -97,17 +97,50 @@
         </span>
       </form>
 
-      <main class="grid min-h-0 flex-1 grid-rows-2 md:grid-cols-2 md:grid-rows-1">
-        <section id="editor" class="min-h-0 overflow-hidden" aria-label="Model code"></section>
-        <section class="relative min-h-0 border-t border-line md:border-t-0 md:border-l dark:border-line-dark" aria-label="3D preview">
-          <iframe id="viewer" title="3D preview" sandbox="allow-scripts" class="block size-full"></iframe>
-          <div
-            id="error"
-            role="alert"
-            hidden
-            class="absolute inset-x-3 bottom-3 max-h-1/2 overflow-auto rounded-lg bg-danger/95 p-3 font-mono text-xs whitespace-pre-wrap text-white shadow-lg"
-          ></div>
+      <!-- Code panel docks on any side (data-code); drag a panel's title onto a side, or use the select. -->
+      <main
+        id="workspace"
+        data-code="left"
+        class="relative flex min-h-0 flex-1 data-[code=bottom]:flex-col-reverse data-[code=right]:flex-row-reverse data-[code=top]:flex-col"
+      >
+        <section id="code-panel" class="flex min-h-0 min-w-0 basis-1/2 flex-col" aria-label="Model code">
+          <div class="flex h-8 shrink-0 items-center gap-2 border-b border-line bg-panel px-2 text-xs text-muted dark:border-line-dark dark:bg-panel-dark">
+            <span draggable="true" data-panel="code" class="cursor-grab select-none" title="Drag onto a side to move the code panel">⠿ Code</span>
+            <label class="sr-only" for="layout">Code panel position</label>
+            <select id="layout" class="field ml-auto py-0.5 text-xs">
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+              <option value="top">Top</option>
+              <option value="bottom">Bottom</option>
+            </select>
+          </div>
+          <div id="editor" class="min-h-0 flex-1 overflow-hidden"></div>
         </section>
+        <div
+          id="splitter"
+          role="separator"
+          tabindex="0"
+          aria-label="Resize code panel"
+          aria-controls="code-panel"
+          aria-valuemin="15"
+          aria-valuemax="85"
+          class="shrink-0 touch-none bg-line hover:bg-brand-500 focus-visible:bg-brand-500 aria-[orientation=horizontal]:h-1.5 aria-[orientation=horizontal]:cursor-row-resize aria-[orientation=vertical]:w-1.5 aria-[orientation=vertical]:cursor-col-resize dark:bg-line-dark"
+        ></div>
+        <section class="flex min-h-0 min-w-0 flex-1 flex-col" aria-label="3D preview">
+          <div class="flex h-8 shrink-0 items-center border-b border-line bg-panel px-2 text-xs text-muted dark:border-line-dark dark:bg-panel-dark">
+            <span draggable="true" data-panel="preview" class="cursor-grab select-none" title="Drag onto a side to move the preview">⠿ Preview</span>
+          </div>
+          <div class="relative min-h-0 flex-1">
+            <iframe id="viewer" title="3D preview" sandbox="allow-scripts" class="block size-full"></iframe>
+            <div
+              id="error"
+              role="alert"
+              hidden
+              class="absolute inset-x-3 bottom-3 max-h-1/2 overflow-auto rounded-lg bg-danger/95 p-3 font-mono text-xs whitespace-pre-wrap text-white shadow-lg"
+            ></div>
+          </div>
+        </section>
+        <div id="dock-hint" hidden class="pointer-events-none absolute z-10 rounded bg-brand-500/15 outline-2 -outline-offset-2 outline-brand-500"></div>
       </main>
 
       <footer

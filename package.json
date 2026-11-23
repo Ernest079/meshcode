@@ -16,7 +16,10 @@
     "build": "pnpm build:runtime && vite build -c web/vite.config.js",
     "preview": "vite preview -c web/vite.config.js",
     "test": "node --test test/*.test.mjs",
-    "demo:gif": "node scripts/demo-gif.mjs"
+    "demo:gif": "node scripts/demo-gif.mjs",
+    "bench:build": "node bench/build.mjs",
+    "bench:check": "node bench/equivalence.mjs",
+    "bench:static": "node bench/static.mjs"
   },
   "keywords": [
     "three.js",

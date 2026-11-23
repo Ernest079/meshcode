@@ -1,6 +1,14 @@
 // Treasure chest — techniques: partial cylinders (thetaLength) for a curved lid, a hinge pivot
-// ready to animate (rotate `lid_hinge` around X), torus arcs as metal bands, and an InstancedMesh
-// coin pile with per-instance rotation. Units: metres, Y up, front faces +Z.
+// animated from code (`animate` rotates `lid_hinge` around X, baked into the GLB), torus arcs as
+// metal bands, and an InstancedMesh coin pile with per-instance rotation. Units: metres, Y up, front faces +Z.
+
+// The lid closes and opens again every 3 s; t = 0 (the rest pose) is fully open.
+export const duration = 3;
+/** @param {import('three').Object3D} root @param {number} t */
+export const animate = (root, t) => {
+  /** @type {import('three').Object3D} */ (root.getObjectByName('lid_hinge')).rotation.x = -1.1 * (0.5 + 0.5 * Math.cos((2 * Math.PI * t) / duration));
+};
+
 /** @param {typeof import('three')} THREE */
 export default (THREE) => {
   let seed = 11;

@@ -34,6 +34,7 @@ meshcode also ships an open benchmark that answers one question: **is it more ef
 - [x] 3.9. Optional AI: local models or your own API key (generate, repair, refine imports)
 - [x] 3.10. README demo GIF
 - [x] 3.11. Model ↔ code: click a part to select its code, cursor to outline parts
+- [x] 3.12. 3D animation from code (rigid parts → GLB keyframes)
 - [ ] 4. Benchmark game in three variants (controlled + real-asset studies)
 - [ ] 5. Measurement harness (desktop + Android)
 - [ ] 6. Analysis, charts, release + DOI
@@ -52,6 +53,21 @@ Your code runs in a sandboxed iframe (opaque origin), so a shared link cannot re
 pnpm dev       # http://localhost:5173
 pnpm build     # → dist/
 ```
+
+### Animation: moving parts from code
+
+Add an `animate` export to move, rotate or scale parts over time. meshcode samples it (`fps`, default 30) into keyframes: the viewer loops them and **Export GLB** (and `meshcode build`) writes them as a glTF animation, which Blender, Godot, Unity and Unreal import.
+
+```js
+export const duration = 3; // seconds
+export const animate = (root, t) => {
+  // absolute values from t (no `+=`); find parts by name. t = 0 is the rest pose.
+  root.getObjectByName('lid_hinge').rotation.x = -1.1 * (0.5 + 0.5 * Math.cos((2 * Math.PI * t) / duration));
+};
+export default (THREE) => { /* … */ };
+```
+
+Only node position/rotation/scale are animated (no skeletons, per-instance or material animation). The Godot/Unity scripts do not carry the animation: export GLB for that. Animations in an imported GLB are not turned into code yet.
 
 ### 2D mode: images from code
 
@@ -72,7 +88,7 @@ Original models in [`examples/`](examples/), each showing a technique (all load 
 | Example | Techniques |
 |---|---|
 | `torch.js` | LatheGeometry profiles, torus rings, canvas textures, unlit layered flame, PointLight, instanced embers |
-| `chest.js` | half-cylinder lid on a hinge pivot (ready to animate), torus arcs, 90-coin InstancedMesh pile |
+| `chest.js` | half-cylinder lid on a hinge pivot, animated with `animate` (opens and closes), torus arcs, 90-coin InstancedMesh pile |
 | `barrel.js` | one profile function drives the lathed body *and* the hoops, wrapping stave texture |
 | `forest.js` | seeded PRNG (change `SEED`), rejection sampling, displaced ground, 265 instances in 5 draw calls |
 | `spaceship.js` | lathed fuselage, wings extruded from a 2D `Shape`, unlit engine glow (forward = −Z) |

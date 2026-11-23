@@ -29,6 +29,7 @@ Optional AI (every result is run, and repaired up to 3 times if it fails):
   --base-url <url>  --model <id>   keys: OPENAI_API_KEY, or ANTHROPIC_API_KEY (default model ${DEFAULT_CLAUDE_MODEL})
 
 A model module is:  export default (THREE) => new THREE.Mesh(...)   // any Object3D
+  (+ export const animate = (root, t) => {…}, duration, fps: parts' motion baked into the GLB)
 A 2D canvas module: export default (ctx, { width, height, frame }) => {…}  (+ export const size, frames)
 Chrome is required (set MESHCODE_CHROME to use a specific binary).`;
 

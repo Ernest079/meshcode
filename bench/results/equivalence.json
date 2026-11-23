@@ -1,0 +1,677 @@
+{
+  "admitted": [
+    "code",
+    "hybrid-png",
+    "hybrid-webp",
+    "hybrid-uastc",
+    "files-png",
+    "files-webp",
+    "files-uastc"
+  ],
+  "excluded": [
+    "files-etc1s",
+    "hybrid-etc1s"
+  ],
+  "rows": [
+    {
+      "config": "code +1 frame",
+      "effects": false,
+      "t": 6.3,
+      "psnr": 27.185124816789106,
+      "within": 0.8742862654320988,
+      "meanAbs": 3.648497942386831,
+      "pass": false,
+      "control": true
+    },
+    {
+      "config": "code +1 frame",
+      "effects": true,
+      "t": 6.3,
+      "psnr": 25.072408383049243,
+      "within": 0.8619174382716049,
+      "meanAbs": 4.176862139917695,
+      "pass": false,
+      "control": true
+    },
+    {
+      "config": "files-etc1s",
+      "effects": false,
+      "t": 3,
+      "psnr": 36.307012862267804,
+      "within": 0.9266512345679012,
+      "meanAbs": 1.9604623199588478,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "files-etc1s",
+      "effects": false,
+      "t": 6.3,
+      "psnr": 36.251415056748336,
+      "within": 0.9240586419753086,
+      "meanAbs": 1.9750733024691358,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "files-etc1s",
+      "effects": false,
+      "t": 11.7,
+      "psnr": 37.46355035540486,
+      "within": 0.9392534722222222,
+      "meanAbs": 1.660801183127572,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "files-etc1s",
+      "effects": false,
+      "t": 19.2,
+      "psnr": 37.89076315463937,
+      "within": 0.9464930555555555,
+      "meanAbs": 1.640872556584362,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "files-etc1s",
+      "effects": true,
+      "t": 3,
+      "psnr": 36.45592354305704,
+      "within": 0.9273533950617284,
+      "meanAbs": 1.936940586419753,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "files-etc1s",
+      "effects": true,
+      "t": 6.3,
+      "psnr": 36.41834356636209,
+      "within": 0.9251041666666666,
+      "meanAbs": 1.9595325360082305,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "files-etc1s",
+      "effects": true,
+      "t": 11.7,
+      "psnr": 37.490634303123095,
+      "within": 0.9386747685185185,
+      "meanAbs": 1.6659323559670782,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "files-etc1s",
+      "effects": true,
+      "t": 19.2,
+      "psnr": 37.88848523445195,
+      "within": 0.9452777777777778,
+      "meanAbs": 1.639198816872428,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "files-png",
+      "effects": false,
+      "t": 3,
+      "psnr": 55.97402619472728,
+      "within": 0.9997010030864197,
+      "meanAbs": 0.02074266975308642,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-png",
+      "effects": false,
+      "t": 6.3,
+      "psnr": 53.167200863692884,
+      "within": 0.9993614969135802,
+      "meanAbs": 0.025875128600823045,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-png",
+      "effects": false,
+      "t": 11.7,
+      "psnr": 58.31362750829613,
+      "within": 0.9998321759259259,
+      "meanAbs": 0.012856867283950617,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-png",
+      "effects": false,
+      "t": 19.2,
+      "psnr": 55.71655398005462,
+      "within": 0.9996990740740741,
+      "meanAbs": 0.01638695987654321,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-png",
+      "effects": true,
+      "t": 3,
+      "psnr": 55.29907723999548,
+      "within": 0.9996855709876543,
+      "meanAbs": 0.03570344650205761,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-png",
+      "effects": true,
+      "t": 6.3,
+      "psnr": 52.87280143736627,
+      "within": 0.9993653549382716,
+      "meanAbs": 0.044823173868312756,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-png",
+      "effects": true,
+      "t": 11.7,
+      "psnr": 56.488637101624384,
+      "within": 0.9996604938271605,
+      "meanAbs": 0.034525462962962966,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-png",
+      "effects": true,
+      "t": 19.2,
+      "psnr": 54.23905158129255,
+      "within": 0.9991685956790124,
+      "meanAbs": 0.03740869341563786,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-uastc",
+      "effects": false,
+      "t": 3,
+      "psnr": 45.75455278474146,
+      "within": 0.9952449845679012,
+      "meanAbs": 0.6153401491769548,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-uastc",
+      "effects": false,
+      "t": 6.3,
+      "psnr": 45.41506740810145,
+      "within": 0.9948283179012346,
+      "meanAbs": 0.6202893518518519,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-uastc",
+      "effects": false,
+      "t": 11.7,
+      "psnr": 47.118726421168844,
+      "within": 0.9968981481481481,
+      "meanAbs": 0.5083043981481481,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-uastc",
+      "effects": false,
+      "t": 19.2,
+      "psnr": 47.38864824019625,
+      "within": 0.9974672067901235,
+      "meanAbs": 0.4977861368312757,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-uastc",
+      "effects": true,
+      "t": 3,
+      "psnr": 45.803224158131776,
+      "within": 0.995480324074074,
+      "meanAbs": 0.6140702160493827,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-uastc",
+      "effects": true,
+      "t": 6.3,
+      "psnr": 45.54040518322331,
+      "within": 0.9953587962962963,
+      "meanAbs": 0.6218936471193416,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-uastc",
+      "effects": true,
+      "t": 11.7,
+      "psnr": 47.09944502208505,
+      "within": 0.9969483024691358,
+      "meanAbs": 0.5165155606995885,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-uastc",
+      "effects": true,
+      "t": 19.2,
+      "psnr": 47.202033355159074,
+      "within": 0.9970216049382716,
+      "meanAbs": 0.5069579475308642,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-webp",
+      "effects": false,
+      "t": 3,
+      "psnr": 50.26002080054904,
+      "within": 0.9989621913580247,
+      "meanAbs": 0.34175475823045265,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-webp",
+      "effects": false,
+      "t": 6.3,
+      "psnr": 49.61142896323348,
+      "within": 0.9989737654320988,
+      "meanAbs": 0.3350900205761317,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-webp",
+      "effects": false,
+      "t": 11.7,
+      "psnr": 52.01659488924426,
+      "within": 0.9996643518518519,
+      "meanAbs": 0.2746257716049383,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-webp",
+      "effects": false,
+      "t": 19.2,
+      "psnr": 51.395499823066984,
+      "within": 0.9996778549382717,
+      "meanAbs": 0.2798566100823045,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-webp",
+      "effects": true,
+      "t": 3,
+      "psnr": 49.8409360431217,
+      "within": 0.9988560956790123,
+      "meanAbs": 0.35954475308641975,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-webp",
+      "effects": true,
+      "t": 6.3,
+      "psnr": 48.92889039075843,
+      "within": 0.9987480709876543,
+      "meanAbs": 0.3728002829218107,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-webp",
+      "effects": true,
+      "t": 11.7,
+      "psnr": 50.88117440015879,
+      "within": 0.9991261574074074,
+      "meanAbs": 0.3079494598765432,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "files-webp",
+      "effects": true,
+      "t": 19.2,
+      "psnr": 50.45535147036918,
+      "within": 0.9989737654320988,
+      "meanAbs": 0.30637731481481484,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-etc1s",
+      "effects": false,
+      "t": 3,
+      "psnr": 36.307012862267804,
+      "within": 0.9266512345679012,
+      "meanAbs": 1.9604623199588478,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "hybrid-etc1s",
+      "effects": false,
+      "t": 6.3,
+      "psnr": 36.25148969477633,
+      "within": 0.9240605709876544,
+      "meanAbs": 1.9750527263374487,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "hybrid-etc1s",
+      "effects": false,
+      "t": 11.7,
+      "psnr": 37.46355035540486,
+      "within": 0.9392534722222222,
+      "meanAbs": 1.660801183127572,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "hybrid-etc1s",
+      "effects": false,
+      "t": 19.2,
+      "psnr": 37.89103030670188,
+      "within": 0.9464930555555555,
+      "meanAbs": 1.6408616255144033,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "hybrid-etc1s",
+      "effects": true,
+      "t": 3,
+      "psnr": 36.541749639341774,
+      "within": 0.9296971450617284,
+      "meanAbs": 1.8993049125514403,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "hybrid-etc1s",
+      "effects": true,
+      "t": 6.3,
+      "psnr": 36.6120700393119,
+      "within": 0.9304494598765433,
+      "meanAbs": 1.8802096193415638,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "hybrid-etc1s",
+      "effects": true,
+      "t": 11.7,
+      "psnr": 37.68660383320888,
+      "within": 0.9428626543209877,
+      "meanAbs": 1.5976491769547325,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "hybrid-etc1s",
+      "effects": true,
+      "t": 19.2,
+      "psnr": 38.043890307371456,
+      "within": 0.948377700617284,
+      "meanAbs": 1.5922659465020577,
+      "pass": false,
+      "control": false
+    },
+    {
+      "config": "hybrid-png",
+      "effects": false,
+      "t": 3,
+      "psnr": 55.97402619472728,
+      "within": 0.9997010030864197,
+      "meanAbs": 0.02074266975308642,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-png",
+      "effects": false,
+      "t": 6.3,
+      "psnr": 53.167200863692884,
+      "within": 0.9993614969135802,
+      "meanAbs": 0.025875128600823045,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-png",
+      "effects": false,
+      "t": 11.7,
+      "psnr": 58.31362750829613,
+      "within": 0.9998321759259259,
+      "meanAbs": 0.012856867283950617,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-png",
+      "effects": false,
+      "t": 19.2,
+      "psnr": 55.71655398005462,
+      "within": 0.9996990740740741,
+      "meanAbs": 0.01638695987654321,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-png",
+      "effects": true,
+      "t": 3,
+      "psnr": 55.99750862992954,
+      "within": 0.9996971450617284,
+      "meanAbs": 0.02030414094650206,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-png",
+      "effects": true,
+      "t": 6.3,
+      "psnr": 53.33294842564626,
+      "within": 0.999369212962963,
+      "meanAbs": 0.024976208847736627,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-png",
+      "effects": true,
+      "t": 11.7,
+      "psnr": 58.261370781462404,
+      "within": 0.999837962962963,
+      "meanAbs": 0.012055041152263374,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-png",
+      "effects": true,
+      "t": 19.2,
+      "psnr": 55.84900952214465,
+      "within": 0.9997029320987655,
+      "meanAbs": 0.01594135802469136,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-uastc",
+      "effects": false,
+      "t": 3,
+      "psnr": 45.75292603363132,
+      "within": 0.9952430555555556,
+      "meanAbs": 0.6153742283950617,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-uastc",
+      "effects": false,
+      "t": 6.3,
+      "psnr": 45.41326571148264,
+      "within": 0.9948263888888889,
+      "meanAbs": 0.6203292181069959,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-uastc",
+      "effects": false,
+      "t": 11.7,
+      "psnr": 47.11237149646766,
+      "within": 0.9968904320987654,
+      "meanAbs": 0.5084169238683127,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-uastc",
+      "effects": false,
+      "t": 19.2,
+      "psnr": 47.38702437332522,
+      "within": 0.9974633487654321,
+      "meanAbs": 0.4978414351851852,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-uastc",
+      "effects": true,
+      "t": 3,
+      "psnr": 45.908199638743106,
+      "within": 0.9954996141975309,
+      "meanAbs": 0.5970138888888888,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-uastc",
+      "effects": true,
+      "t": 6.3,
+      "psnr": 45.690459637431815,
+      "within": 0.9953722993827161,
+      "meanAbs": 0.5936541923868313,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-uastc",
+      "effects": true,
+      "t": 11.7,
+      "psnr": 47.33611811850074,
+      "within": 0.9971315586419753,
+      "meanAbs": 0.4886940586419753,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-uastc",
+      "effects": true,
+      "t": 19.2,
+      "psnr": 47.527430280652666,
+      "within": 0.997554012345679,
+      "meanAbs": 0.4833963477366255,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-webp",
+      "effects": false,
+      "t": 3,
+      "psnr": 50.26002080054904,
+      "within": 0.9989621913580247,
+      "meanAbs": 0.34175475823045265,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-webp",
+      "effects": false,
+      "t": 6.3,
+      "psnr": 49.61142896323348,
+      "within": 0.9989737654320988,
+      "meanAbs": 0.3350900205761317,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-webp",
+      "effects": false,
+      "t": 11.7,
+      "psnr": 52.01659488924426,
+      "within": 0.9996643518518519,
+      "meanAbs": 0.2746257716049383,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-webp",
+      "effects": false,
+      "t": 19.2,
+      "psnr": 51.395499823066984,
+      "within": 0.9996778549382717,
+      "meanAbs": 0.2798566100823045,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-webp",
+      "effects": true,
+      "t": 3,
+      "psnr": 50.33700275119152,
+      "within": 0.9989583333333333,
+      "meanAbs": 0.33319187242798354,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-webp",
+      "effects": true,
+      "t": 6.3,
+      "psnr": 49.78263895047296,
+      "within": 0.9990219907407407,
+      "meanAbs": 0.32363940329218105,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-webp",
+      "effects": true,
+      "t": 11.7,
+      "psnr": 52.15066689305077,
+      "within": 0.9997029320987655,
+      "meanAbs": 0.26513310185185185,
+      "pass": true,
+      "control": false
+    },
+    {
+      "config": "hybrid-webp",
+      "effects": true,
+      "t": 19.2,
+      "psnr": 51.5289989787129,
+      "within": 0.9996817129629629,
+      "meanAbs": 0.2713638117283951,
+      "pass": true,
+      "control": false
+    }
+  ]
+}

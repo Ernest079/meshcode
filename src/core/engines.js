@@ -18,6 +18,10 @@ const pascal = (/** @type {string} */ s) => {
 const snake = (/** @type {string} */ s) =>
   s.replace(/([a-z0-9])([A-Z])/g, '$1_$2').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '').toLowerCase() || 'model';
 
+// ponytail: animations only travel in the GLB (both engines import its clips); generate AnimationPlayer / AnimationClip code if needed.
+const animationWarning = (/** @type {THREE.Object3D} */ root) =>
+  root.animations.length ? [`${root.animations.length} animation(s) not included here: export GLB, which Godot and Unity import with its animations`] : [];
+
 const hasMaps = (/** @type {any} */ m) => ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap', 'alphaMap'].some((k) => m[k]);
 const firstMap = (/** @type {any} */ m) => m.map ?? m.normalMap ?? m.roughnessMap ?? m.metalnessMap ?? m.emissiveMap ?? m.aoMap ?? null;
 
@@ -81,7 +85,7 @@ function walk(/** @type {THREE.Object3D} */ o, /** @type {(o: THREE.Object3D, pa
  */
 export function toGodot(root, opts = {}) {
   root.updateMatrixWorld(true);
-  /** @type {string[]} */ const lines = [], data = [], warnings = [];
+  /** @type {string[]} */ const lines = [], data = [], warnings = animationWarning(root);
   /** @type {EngineExport['meshes']} */ const meshes = [];
   const cache = new Map();
   let n = 0;
@@ -330,7 +334,7 @@ ${data.join('\n')}
  */
 export function toUnity(root, opts = {}) {
   root.updateMatrixWorld(true);
-  /** @type {string[]} */ const lines = [], data = [], warnings = [];
+  /** @type {string[]} */ const lines = [], data = [], warnings = animationWarning(root);
   /** @type {EngineExport['meshes']} */ const meshes = [];
   const cache = new Map();
   let n = 0;

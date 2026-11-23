@@ -126,6 +126,7 @@ for (const file of readdirSync('examples').filter((f) => f.endsWith('.js'))) {
     const name = file.replace(/\.js$/, '');
     const r = await decompileFile(await glbOf(`examples/${file}`, dir, name), path.join(dir, `${name}.out.js`));
     assertFaithful(r);
-    assert.deepEqual(r.warnings, []);
+    // Animations are not decompiled yet: said out loud, not dropped silently.
+    assert.deepEqual(r.warnings, file === 'chest.js' ? ['1 animation(s) dropped: not converted to code yet'] : []);
   });
 }

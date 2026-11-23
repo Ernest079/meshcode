@@ -60,6 +60,9 @@ const TRACED = /** @type {typeof THREE} */ ({
 
 /** @type {THREE.Object3D | null} */
 let current = null;
+/** @type {THREE.AnimationMixer | null} */
+let mixer = null; // plays current.animations (baked from the model's `animate` export)
+const clock = new THREE.Clock();
 /** @type {THREE.Object3D | null} */
 let imported = null; // last imported GLB: the reference for AI refine checks
 let pendingStats = false;
@@ -218,6 +221,9 @@ function show(root) {
       for (const m of [mesh.material].flat()) m?.dispose();
     });
   }
+  mixer?.stopAllAction();
+  mixer = root.animations.length ? new THREE.AnimationMixer(root) : null;
+  for (const clip of root.animations) mixer?.clipAction(clip).play();
   current = root;
   highlight([]);
   scene.add(root);
@@ -226,6 +232,7 @@ function show(root) {
 }
 
 function loop() {
+  mixer?.update(clock.getDelta());
   controls.update();
   renderer.render(scene, camera);
   if (pendingStats && current) {

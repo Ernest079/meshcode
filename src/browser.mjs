@@ -118,7 +118,7 @@ export async function buildFile(modelPath) {
     const r = await page.evaluate(async (name) => {
       const core = await import('/meshcode/core/glb.js');
       const mod = await import(`/model/${encodeURIComponent(name)}`);
-      const root = await core.runModel(mod.default);
+      const root = await core.runModule(mod);
       return { b64: globalThis.__toB64(await core.exportGLB(root)), stats: core.sceneStats(root) };
     }, path.basename(abs));
     return { glb: Buffer.from(r.b64, 'base64'), stats: r.stats };
