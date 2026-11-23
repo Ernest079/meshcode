@@ -73,7 +73,7 @@ export default (THREE) => {
   chest.add(hinge);
 
   // Half cylinder lying along X: thetaLength = PI keeps only the upper half.
-  const lidShape = new THREE.CylinderGeometry(R, R, W, 24, 1, false, -Math.PI / 2, Math.PI);
+  const lidShape = new THREE.CylinderGeometry(R, R, W, 24, 1, false, 0, Math.PI);
   lidShape.rotateZ(Math.PI / 2);
   const lid = new THREE.Mesh(lidShape, wood);
   lid.name = 'lid';

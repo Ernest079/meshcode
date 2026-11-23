@@ -7,3 +7,5 @@ web/public/runtime.js
 bench/dist
 bench/game/public/assets
 bench/results/frames
+bench/game/public/real
+bench/real/build

@@ -30,6 +30,29 @@ game/src/game.js   the game, shared by all variants
 game/src/variants/ code.js, hybrid.js, files.js (+ assets.js: GLB / image loading)
 ```
 
+## Real study (`real.html`)
+
+The controlled study bakes files from our own code. The real study starts from **artists' CC0 models** (Kenney's
+`enemy-flying`, KayKit `cargo_A` and `Barrel_A`; see `real/source/LICENSES.md`) and swaps them in as the drone, crate and
+barrel. Arena, bolt, effects and layout stay code in every configuration; only the props' delivery changes:
+
+| `?props=` | props are | how they were made |
+|---|---|---|
+| `glb` (`&tex=png\|png128\|uastc`) | the original GLBs (+ meshopt); atlas as shipped, downsampled to ≤ 128 px, or KTX2 | packed by `build.mjs` |
+| `decompiled` | `meshcode decompile` modules (geometry as data) + atlas PNG, served unbundled | `build.mjs` |
+| `code` | parametric imitations, vertex colours, no textures (`real/models/`) | written by hand from measurements |
+
+```sh
+pnpm bench:check --set real   # scene gate vs the originals (decompiled, png128, uastc strict; the imitation is report-only)
+pnpm bench:real               # model gate: silhouette IoU + colour error per prop, authoring size → results/real-models.md
+pnpm bench:static --set real  # bytes, GPU memory, generation time → results/static-real.md
+node real/measure.mjs <model.gltf|.glb> [profile]   # palette colours, extents and profile of an original
+node real/compare.mjs <original> <imitation> -o sheet.png
+```
+
+`real/llm-dolphin3/` holds one-shot imitations by a small local model (Ollama dolphin3, 8B) from a text description
+only (`run.sh`, prompts in `prompts.json`), as a contrast to the measured, iterated hand-written ones.
+
 ## Vendored: Basis Universal encoder
 
 `vendor/basis/` holds the official prebuilt WASM encoder of [Basis Universal](https://github.com/BinomialLLC/basis_universal)

@@ -1,0 +1,5 @@
+{
+  "crate": "A low-poly cargo box 0.5 m wide and 0.52 m tall, origin at the bottom centre: a cube with every edge chamfered (bevel 0.0625 m), the lower half white (#d4dcdf) and the upper half red (#dd3a3e), a small orange label (#cf9645) on the front near the bottom left, and a small grey octagonal screw cap (#7b858a) on the lid near one corner.",
+  "barrel": "A low-poly 12-sided barrel, 1 m tall and 1 m wide, centred on the origin: three raised rings (bottom, middle, top) of radius 0.5 m with a body of radius 0.453 m between them, and recessed lids at top and bottom; colour gradient from crimson (#b91e4b) at the bottom to orange (#ec5527) at the top.",
+  "drone": "A cute flying robot enemy, 1.2 m wide and 0.875 m tall, origin at the bottom centre, facing +Z: a 0.6 m rounded cube torso (lower half red #ed563e, upper half dark grey #3b3b41) with a yellow face plate (#ffc356) on the front showing angry dark eyebrows, eyes and a smirk; a short antenna on top with a red rounded knob; two grey-blue blasters (#747990) on octagonal side mounts at the left and right, pointing forward (+Z)."
+}

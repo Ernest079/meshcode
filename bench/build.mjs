@@ -6,8 +6,12 @@
 //   3. the same GLBs with KTX2 / Basis Universal textures, UASTC and ETC1S (KHR_texture_basisu)  assets/{uastc,etc1s}/*.glb
 //   4. effects: explosion flipbook + particle sprite rendered from the shaders       assets/{png,webp,uastc,etc1s}/
 //   5. layout.json from the same seeded generator                                    assets/layout.json
-//   6. vite build of the three pages (KTX2Loader bundles three.js's Basis transcoder) bench/dist/
+//   6. real study (4.2): the artists' CC0 models (bench/real/source) packed as GLB    assets/real/{png,png128,uastc}/*.glb
+//      (png128: palette atlases box-downsampled to ≤ 128 px with ImageMagick — the files-side best practice)
+//      and decompiled by meshcode into model modules + their atlas                 public/real/decompiled/
+//   7. vite build of the pages (KTX2Loader bundles three.js's Basis transcoder)     bench/dist/
 // KTX2 encoding uses the official Basis Universal encoder (WASM, bench/vendor/basis/), run here in Node.
+import { execFileSync } from 'node:child_process';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -16,7 +20,7 @@ import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, EXTTextureWebP, KHRTextureBasisu } from '@gltf-transform/extensions';
 import { listTextureSlots } from '@gltf-transform/functions';
 import { build } from 'vite';
-import { buildFile, withPage } from '../src/browser.mjs';
+import { buildFile, decompileFile, withPage } from '../src/browser.mjs';
 import { meshoptGLB } from '../src/optimize.mjs';
 import { generateLayout } from './game/src/layout.js';
 
@@ -126,6 +130,36 @@ await withPage({ bench: SRC }, async (page) => {
     }
   }
 });
+
+// 6. Real study: originals packed (as shipped: PNG atlas; and UASTC), meshopt like every other GLB; the
+// unoptimised pack is kept in bench/real/build/ as the reference for decompile and the model-level gate.
+export const ATLAS = 128; // px, the downsampled palette atlas of the png128 sub-condition
+export const REAL = { crate: 'kaykit-space/cargo_A.gltf', barrel: 'kaykit-prototype/Barrel_A.gltf', drone: 'kenney-fps/enemy-flying.glb' };
+const REAL_BUILD = path.join(HERE, 'real/build'), DECOMPILED = path.join(HERE, 'game/public/real/decompiled');
+await Promise.all([REAL_BUILD, DECOMPILED, path.join(OUT, 'real/png'), path.join(OUT, 'real/png128'), path.join(OUT, 'real/uastc')].map((d) => mkdir(d, { recursive: true })));
+const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
+for (const [name, source] of Object.entries(REAL)) {
+  const doc = await io.read(path.join(HERE, 'real/source', source));
+  const packed = await io.writeBinary(doc);
+  await writeFile(path.join(REAL_BUILD, `${name}.glb`), packed);
+  const png = await meshoptGLB(packed);
+  await writeFile(path.join(OUT, 'real/png', `${name}.glb`), png);
+  const smallDoc = await io.readBinary(packed);
+  for (const t of smallDoc.getRoot().listTextures()) {
+    t.setImage(execFileSync('convert', ['png:-', '-filter', 'Box', '-resize', `${ATLAS}x${ATLAS}>`, 'png:-'], { input: /** @type {Uint8Array} */ (t.getImage()) }));
+  }
+  const png128 = await meshoptGLB(await io.writeBinary(smallDoc));
+  await writeFile(path.join(OUT, 'real/png128', `${name}.glb`), png128);
+  for (const t of doc.getRoot().listTextures()) {
+    const srgb = listTextureSlots(t).some((s) => /baseColor|emissive/.test(s));
+    t.setImage(toKTX2(/** @type {Uint8Array} */ (t.getImage()), 'uastc', { srgb, mips: true })).setMimeType('image/ktx2').setURI('');
+  }
+  doc.createExtension(KHRTextureBasisu).setRequired(true);
+  const uastc = await meshoptGLB(await io.writeBinary(doc));
+  await writeFile(path.join(OUT, 'real/uastc', `${name}.glb`), uastc);
+  const d = await decompileFile(path.join(REAL_BUILD, `${name}.glb`), path.join(DECOMPILED, `${name}.js`));
+  console.log(`real ${name.padEnd(7)} packed ${kb(packed.length)} → png ${kb(png.length)} · png128 ${kb(png128.length)} · uastc ${kb(uastc.length)} · decompiled ${kb(d.code.length)} + ${d.textureFiles.join(', ')} (IoU ${d.fidelity.mean.toFixed(3)})`);
+}
 
 const layout = JSON.stringify(generateLayout());
 await writeFile(path.join(OUT, 'layout.json'), layout);

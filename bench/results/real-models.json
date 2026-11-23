@@ -1,0 +1,240 @@
+{
+  "gate": {
+    "decompiled": {
+      "min": 0.999
+    },
+    "code": {
+      "mean": 0.9,
+      "min": 0.85,
+      "colour": 12
+    }
+  },
+  "kit": {
+    "raw": 8696,
+    "br": 2936,
+    "lines": 99
+  },
+  "rows": [
+    {
+      "prop": "crate",
+      "decompiled": {
+        "iou": {
+          "mean": 1,
+          "min": 1,
+          "views": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "colour": {
+          "mean": 0,
+          "views": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "tris": [
+          128,
+          128
+        ],
+        "materials": []
+      },
+      "code": {
+        "iou": {
+          "mean": 0.9999660832994165,
+          "min": 0.9997964997964998,
+          "views": [
+            1,
+            0.9997964997964998,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "colour": {
+          "mean": 4.277148100774857,
+          "views": [
+            3.9135579372991036,
+            6.023586476808937,
+            2.8532658886742315,
+            4.3181821003171565
+          ]
+        },
+        "tris": [
+          128,
+          128
+        ],
+        "materials": [
+          "mesh 0: vertexColors false vs true",
+          "mesh 0: normalScale 1,-1 vs 1,1",
+          "mesh 0: map present vs missing"
+        ]
+      },
+      "source": {
+        "raw": 1538,
+        "br": 687,
+        "lines": 19
+      },
+      "pass": {
+        "decompiled": true,
+        "code": true
+      }
+    },
+    {
+      "prop": "barrel",
+      "decompiled": {
+        "iou": {
+          "mean": 1,
+          "min": 1,
+          "views": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "colour": {
+          "mean": 0,
+          "views": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "tris": [
+          384,
+          384
+        ],
+        "materials": []
+      },
+      "code": {
+        "iou": {
+          "mean": 0.9999330387036293,
+          "min": 0.9997991161108879,
+          "views": [
+            0.9997991161108879,
+            1,
+            0.9997991161108879,
+            1,
+            1,
+            1
+          ]
+        },
+        "colour": {
+          "mean": 2.990933808472679,
+          "views": [
+            2.2911608847222733,
+            2.2961865593537194,
+            5.0894573391263975,
+            2.286930450688326
+          ]
+        },
+        "tris": [
+          384,
+          384
+        ],
+        "materials": [
+          "mesh 0: vertexColors false vs true",
+          "mesh 0: normalScale 1,-1 vs 1,1",
+          "mesh 0: map present vs missing"
+        ]
+      },
+      "source": {
+        "raw": 1217,
+        "br": 613,
+        "lines": 12
+      },
+      "pass": {
+        "decompiled": true,
+        "code": true
+      }
+    },
+    {
+      "prop": "drone",
+      "decompiled": {
+        "iou": {
+          "mean": 1,
+          "min": 1,
+          "views": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ]
+        },
+        "colour": {
+          "mean": 0.1420388242445678,
+          "views": [
+            0.13417889714321304,
+            0.1352692652718692,
+            0.15692812183634763,
+            0.14177901272684126
+          ]
+        },
+        "tris": [
+          544,
+          544
+        ],
+        "materials": []
+      },
+      "code": {
+        "iou": {
+          "mean": 0.9667776439437854,
+          "min": 0.942833607907743,
+          "views": [
+            0.9863760217983651,
+            0.9991240145163309,
+            0.942833607907743,
+            0.9576553491351698,
+            0.9576553491351698,
+            0.9570215211699342
+          ]
+        },
+        "colour": {
+          "mean": 9.448593289299685,
+          "views": [
+            9.253352704514942,
+            14.895154185021841,
+            3.4224132231405298,
+            10.22345304452143
+          ]
+        },
+        "tris": [
+          544,
+          570
+        ],
+        "materials": [
+          "mesh 0: vertexColors false vs true",
+          "mesh 0: map present vs missing",
+          "mesh 1: vertexColors false vs true",
+          "mesh 1: map present vs missing",
+          "mesh 2: vertexColors false vs true",
+          "mesh 2: map present vs missing",
+          "mesh 3: vertexColors false vs true",
+          "mesh 3: map present vs missing"
+        ]
+      },
+      "source": {
+        "raw": 5845,
+        "br": 2016,
+        "lines": 61
+      },
+      "pass": {
+        "decompiled": true,
+        "code": true
+      }
+    }
+  ]
+}

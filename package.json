@@ -19,7 +19,8 @@
     "demo:gif": "node scripts/demo-gif.mjs",
     "bench:build": "node bench/build.mjs",
     "bench:check": "node bench/equivalence.mjs",
-    "bench:static": "node bench/static.mjs"
+    "bench:static": "node bench/static.mjs",
+    "bench:real": "node bench/real/gate.mjs"
   },
   "keywords": [
     "three.js",

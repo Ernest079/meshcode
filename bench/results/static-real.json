@@ -1,0 +1,587 @@
+{
+  "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "reps": 5,
+  "results": {
+    "real?props=code": {
+      "reps": [
+        {
+          "start": 36.69999999925494,
+          "assets": 122.79999999888241,
+          "world": 125,
+          "compiled": 147.19999999925494,
+          "first-frame": 199.09999999962747,
+          "downloaded": 18,
+          "heap": 13095439,
+          "generate": {
+            "arena": 48.19999999925494,
+            "bolt": 0.7000000011175871,
+            "crate": 2.099999999627471,
+            "barrel": 2.200000001117587,
+            "drone": 3.699999999254942
+          }
+        },
+        {
+          "start": 26.700000001117587,
+          "assets": 110.40000000037253,
+          "world": 112.60000000149012,
+          "compiled": 134.2000000011176,
+          "first-frame": 248.5,
+          "downloaded": 10.5,
+          "heap": 13090159,
+          "generate": {
+            "arena": 44.90000000037253,
+            "bolt": 0.6999999992549419,
+            "crate": 2.5,
+            "barrel": 1.800000000745058,
+            "drone": 3.799999998882413
+          }
+        },
+        {
+          "start": 30.59999999962747,
+          "assets": 112.69999999925494,
+          "world": 115,
+          "compiled": 136.5,
+          "first-frame": 259.59999999962747,
+          "downloaded": 14,
+          "heap": 13047055,
+          "generate": {
+            "arena": 45.79999999888241,
+            "bolt": 0.7000000011175871,
+            "crate": 2.199999999254942,
+            "barrel": 2.100000001490116,
+            "drone": 4.5
+          }
+        },
+        {
+          "start": 31.199999999254942,
+          "assets": 115,
+          "world": 117.19999999925494,
+          "compiled": 138.80000000074506,
+          "first-frame": 266.59999999962747,
+          "downloaded": 13.800000000745058,
+          "heap": 13087499,
+          "generate": {
+            "arena": 46.19999999925494,
+            "bolt": 0.6000000014901161,
+            "crate": 2.5,
+            "barrel": 1.800000000745058,
+            "drone": 3.599999999627471
+          }
+        },
+        {
+          "start": 28.09999999962747,
+          "assets": 111.79999999888241,
+          "world": 114.69999999925494,
+          "compiled": 138,
+          "first-frame": 262.5,
+          "downloaded": 11.199999999254942,
+          "heap": 13083743,
+          "generate": {
+            "arena": 46,
+            "bolt": 0.599999999627471,
+            "crate": 2.5,
+            "barrel": 3.199999999254942,
+            "drone": 5.099999999627471
+          }
+        }
+      ],
+      "files": [
+        "real.html",
+        "assets/real-DgBChYGo.js",
+        "assets/bolt-CvUqYsNy.js",
+        "assets/assets-B9m3q2SH.js",
+        "assets/game-BgSfE8N6.js",
+        "assets/three.core-BF58tRDi.js",
+        "assets/props-Bh7urd7f.js"
+      ],
+      "render": {
+        "calls": 50,
+        "triangles": 120388,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 17,
+        "textures": 2,
+        "geometryBytes": 330896,
+        "textureBytes": 8388608,
+        "compressedFormats": []
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 841984,
+            "gzip": 219491,
+            "br": 180747
+          },
+          "models": {
+            "raw": 6673,
+            "gzip": 2959,
+            "br": 2632
+          }
+        },
+        "total": {
+          "raw": 848657,
+          "gzip": 222450,
+          "br": 183379
+        },
+        "requests": 7
+      }
+    },
+    "real?props=decompiled": {
+      "reps": [
+        {
+          "start": 34.09999999962747,
+          "assets": 126.19999999925494,
+          "world": 128.40000000037253,
+          "compiled": 149.90000000037253,
+          "first-frame": 262.30000000074506,
+          "downloaded": 115,
+          "heap": 13814257,
+          "generate": {
+            "arena": 52.399999998509884,
+            "bolt": 0.6000000014901161
+          }
+        },
+        {
+          "start": 31.90000000037253,
+          "assets": 113.5,
+          "world": 115.5,
+          "compiled": 136.09999999962747,
+          "first-frame": 275.19999999925494,
+          "downloaded": 101.59999999962747,
+          "heap": 13697101,
+          "generate": {
+            "arena": 46.09999999962747,
+            "bolt": 0.599999999627471
+          }
+        },
+        {
+          "start": 36.399999998509884,
+          "assets": 124.09999999962747,
+          "world": 126.5,
+          "compiled": 148.69999999925494,
+          "first-frame": 288.09999999962747,
+          "downloaded": 113.19999999925494,
+          "heap": 12986129,
+          "generate": {
+            "arena": 49.5,
+            "bolt": 0.5
+          }
+        },
+        {
+          "start": 31.700000001117587,
+          "assets": 114.80000000074506,
+          "world": 116.70000000111759,
+          "compiled": 142.30000000074506,
+          "first-frame": 271.5,
+          "downloaded": 109.5,
+          "heap": 13844149,
+          "generate": {
+            "arena": 46.09999999962747,
+            "bolt": 0.6999999992549419
+          }
+        },
+        {
+          "start": 27.600000001490116,
+          "assets": 109.70000000111759,
+          "world": 111.70000000111759,
+          "compiled": 133.2000000011176,
+          "first-frame": 271.2000000011176,
+          "downloaded": 96.70000000111759,
+          "heap": 13837029,
+          "generate": {
+            "arena": 45.90000000037253,
+            "bolt": 0.599999999627471
+          }
+        }
+      ],
+      "files": [
+        "real.html",
+        "assets/real-DgBChYGo.js",
+        "assets/bolt-CvUqYsNy.js",
+        "assets/assets-B9m3q2SH.js",
+        "assets/game-BgSfE8N6.js",
+        "assets/three.core-BF58tRDi.js",
+        "real/decompiled/barrel.js",
+        "real/decompiled/crate.js",
+        "real/decompiled/drone.js",
+        "real/decompiled/barrel.tex0.png",
+        "real/decompiled/crate.tex0.png",
+        "real/decompiled/drone.tex0.png"
+      ],
+      "render": {
+        "calls": 50,
+        "triangles": 118308,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 17,
+        "textures": 5,
+        "geometryBytes": 288312,
+        "textureBytes": 20971520,
+        "compressedFormats": []
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 841984,
+            "gzip": 219491,
+            "br": 180747
+          },
+          "models": {
+            "raw": 169657,
+            "gzip": 78382,
+            "br": 71964
+          }
+        },
+        "total": {
+          "raw": 1011641,
+          "gzip": 297873,
+          "br": 252711
+        },
+        "requests": 12
+      }
+    },
+    "real?props=glb&tex=png": {
+      "reps": [
+        {
+          "start": 31.59999999962747,
+          "assets": 138.7000000011176,
+          "world": 142.30000000074506,
+          "compiled": 163.59999999962747,
+          "first-frame": 293.59999999962747,
+          "downloaded": 112.5,
+          "heap": 13053000,
+          "generate": {
+            "arena": 46.30000000074506,
+            "bolt": 0.5
+          }
+        },
+        {
+          "start": 31.100000001490116,
+          "assets": 131.10000000149012,
+          "world": 133.30000000074506,
+          "compiled": 155.5,
+          "first-frame": 279.5,
+          "downloaded": 113.10000000149012,
+          "heap": 13084552,
+          "generate": {
+            "arena": 47.19999999925494,
+            "bolt": 0.6999999992549419
+          }
+        },
+        {
+          "start": 28.200000001117587,
+          "assets": 123.80000000074506,
+          "world": 126,
+          "compiled": 147.80000000074506,
+          "first-frame": 271.7000000011176,
+          "downloaded": 105.30000000074506,
+          "heap": 13035896,
+          "generate": {
+            "arena": 45.40000000037253,
+            "bolt": 0.5
+          }
+        },
+        {
+          "start": 35.69999999925494,
+          "assets": 130.2999999988824,
+          "world": 132.5,
+          "compiled": 153.59999999962747,
+          "first-frame": 278.90000000037253,
+          "downloaded": 112.79999999888241,
+          "heap": 13071276,
+          "generate": {
+            "arena": 46.19999999925494,
+            "bolt": 0.599999999627471
+          }
+        },
+        {
+          "start": 26.59999999962747,
+          "assets": 124,
+          "world": 126.19999999925494,
+          "compiled": 150.7999999988824,
+          "first-frame": 288,
+          "downloaded": 105.69999999925494,
+          "heap": 13081788,
+          "generate": {
+            "arena": 48.30000000074506,
+            "bolt": 0.7999999988824129
+          }
+        }
+      ],
+      "files": [
+        "real.html",
+        "assets/real-DgBChYGo.js",
+        "assets/bolt-CvUqYsNy.js",
+        "assets/assets-B9m3q2SH.js",
+        "assets/game-BgSfE8N6.js",
+        "assets/three.core-BF58tRDi.js",
+        "assets/real/png/crate.glb",
+        "assets/real/png/barrel.glb",
+        "assets/real/png/drone.glb"
+      ],
+      "render": {
+        "calls": 50,
+        "triangles": 118308,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 17,
+        "textures": 5,
+        "geometryBytes": 260776,
+        "textureBytes": 20971520,
+        "compressedFormats": []
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 841984,
+            "gzip": 219491,
+            "br": 180747
+          },
+          "models": {
+            "raw": 103200,
+            "gzip": 75027,
+            "br": 71342
+          }
+        },
+        "total": {
+          "raw": 945184,
+          "gzip": 294518,
+          "br": 252089
+        },
+        "requests": 9
+      }
+    },
+    "real?props=glb&tex=png128": {
+      "reps": [
+        {
+          "start": 29,
+          "assets": 121.30000000074506,
+          "world": 124,
+          "compiled": 148.59999999962747,
+          "first-frame": 286,
+          "downloaded": 106.40000000037253,
+          "heap": 12879453,
+          "generate": {
+            "arena": 45.30000000074506,
+            "bolt": 0.599999999627471
+          }
+        },
+        {
+          "start": 26.09999999962747,
+          "assets": 110.69999999925494,
+          "world": 113.29999999888241,
+          "compiled": 134.89999999850988,
+          "first-frame": 252.39999999850988,
+          "downloaded": 101.29999999888241,
+          "heap": 12902969,
+          "generate": {
+            "arena": 45.59999999962747,
+            "bolt": 0.5
+          }
+        },
+        {
+          "start": 26.199999999254942,
+          "assets": 114.59999999962747,
+          "world": 117,
+          "compiled": 138.59999999962747,
+          "first-frame": 258.69999999925494,
+          "downloaded": 102.80000000074506,
+          "heap": 12900385,
+          "generate": {
+            "arena": 46,
+            "bolt": 0.6999999992549419
+          }
+        },
+        {
+          "start": 31.5,
+          "assets": 119.09999999962747,
+          "world": 121.19999999925494,
+          "compiled": 143.69999999925494,
+          "first-frame": 262.90000000037253,
+          "downloaded": 108.69999999925494,
+          "heap": 12897625,
+          "generate": {
+            "arena": 46.79999999888241,
+            "bolt": 0.599999999627471
+          }
+        },
+        {
+          "start": 31.300000000745058,
+          "assets": 119.70000000111759,
+          "world": 122.30000000074506,
+          "compiled": 146.40000000037253,
+          "first-frame": 300,
+          "downloaded": 108.90000000037253,
+          "heap": 13045317,
+          "generate": {
+            "arena": 46.69999999925494,
+            "bolt": 0.7000000011175871
+          }
+        }
+      ],
+      "files": [
+        "real.html",
+        "assets/real-DgBChYGo.js",
+        "assets/bolt-CvUqYsNy.js",
+        "assets/assets-B9m3q2SH.js",
+        "assets/game-BgSfE8N6.js",
+        "assets/three.core-BF58tRDi.js",
+        "assets/real/png128/crate.glb",
+        "assets/real/png128/drone.glb",
+        "assets/real/png128/barrel.glb"
+      ],
+      "render": {
+        "calls": 50,
+        "triangles": 118308,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 17,
+        "textures": 5,
+        "geometryBytes": 260776,
+        "textureBytes": 8650752,
+        "compressedFormats": []
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 841984,
+            "gzip": 219491,
+            "br": 180747
+          },
+          "models": {
+            "raw": 47824,
+            "gzip": 30346,
+            "br": 27950
+          }
+        },
+        "total": {
+          "raw": 889808,
+          "gzip": 249837,
+          "br": 208697
+        },
+        "requests": 9
+      }
+    },
+    "real?props=glb&tex=uastc": {
+      "reps": [
+        {
+          "start": 25.90000000037253,
+          "assets": 267.5,
+          "world": 270.1000000014901,
+          "compiled": 292.1000000014901,
+          "first-frame": 412.6000000014901,
+          "downloaded": 107.80000000074506,
+          "heap": 17904936,
+          "generate": {
+            "arena": 46.20000000111759,
+            "bolt": 0.6999999992549419
+          }
+        },
+        {
+          "start": 26.90000000037253,
+          "assets": 268.09999999962747,
+          "world": 270.40000000037253,
+          "compiled": 292,
+          "first-frame": 425,
+          "downloaded": 109.80000000074506,
+          "heap": 17873900,
+          "generate": {
+            "arena": 46.90000000037253,
+            "bolt": 0.599999999627471
+          }
+        },
+        {
+          "start": 28.59999999962747,
+          "assets": 283.09999999962747,
+          "world": 285.40000000037253,
+          "compiled": 306.2999999988824,
+          "first-frame": 425.59999999962747,
+          "downloaded": 112.19999999925494,
+          "heap": 18641828,
+          "generate": {
+            "arena": 45.69999999925494,
+            "bolt": 0.6999999992549419
+          }
+        },
+        {
+          "start": 29.300000000745058,
+          "assets": 257.5,
+          "world": 259.80000000074506,
+          "compiled": 282,
+          "first-frame": 408.7000000011176,
+          "downloaded": 111.80000000074506,
+          "heap": 17868684,
+          "generate": {
+            "arena": 45.600000001490116,
+            "bolt": 0.599999999627471
+          }
+        },
+        {
+          "start": 36.20000000111759,
+          "assets": 291.59999999962747,
+          "world": 293.80000000074506,
+          "compiled": 314.90000000037253,
+          "first-frame": 437.90000000037253,
+          "downloaded": 119.5,
+          "heap": 18792104,
+          "generate": {
+            "arena": 46.5,
+            "bolt": 0.599999999627471
+          }
+        }
+      ],
+      "files": [
+        "real.html",
+        "assets/real-DgBChYGo.js",
+        "assets/bolt-CvUqYsNy.js",
+        "assets/assets-B9m3q2SH.js",
+        "assets/game-BgSfE8N6.js",
+        "assets/three.core-BF58tRDi.js",
+        "assets/KTX2Loader-DY-RVu2X.js",
+        "assets/real/uastc/drone.glb",
+        "assets/real/uastc/crate.glb",
+        "assets/real/uastc/barrel.glb",
+        "assets/basis_transcoder-o4Hde_L7.js",
+        "assets/basis_transcoder-VXdx5NbI.wasm"
+      ],
+      "render": {
+        "calls": 50,
+        "triangles": 118308,
+        "programs": 11
+      },
+      "memory": {
+        "geometries": 17,
+        "textures": 5,
+        "geometryBytes": 260776,
+        "textureBytes": 11534416,
+        "compressedFormats": [
+          "BC7"
+        ]
+      },
+      "transfer": {
+        "by": {
+          "code": {
+            "raw": 1486300,
+            "gzip": 506383,
+            "br": 418778
+          },
+          "models": {
+            "raw": 295576,
+            "gzip": 276806,
+            "br": 273508
+          }
+        },
+        "total": {
+          "raw": 1781876,
+          "gzip": 783189,
+          "br": 692286
+        },
+        "requests": 12
+      }
+    }
+  }
+}

@@ -1,7 +1,9 @@
 // Visual equivalence gate (protocol rule 1, pnpm bench:check): configurations are compared only if they look
 // the same. Failing ones are listed as excluded (results/equivalence.json → admitted / excluded); the run
 // exits 1 only if the negative control passes. Every page renders the same instants (?freeze) at 960×540, dpr 1; frames are read back as
-// RGBA and compared with the code variant, the source of truth. Run bench:build first.
+// RGBA and compared with the reference: the code variant (the source of truth) or, with --set real, the
+// artists' original files. Run bench:build first.
+//   node bench/equivalence.mjs [--set controlled|real]
 // Thresholds were fixed before the first run (see research/bitacora.md):
 //   scene only (?novfx): PSNR ≥ 35 dB and ≥ 99 % of pixels within ±8 levels on every channel
 //   with effects:        PSNR ≥ 30 dB and ≥ 97 %  (flipbooks sample the effect at 64 discrete ages)
@@ -9,13 +11,29 @@ import { execFileSync } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 import { launchChrome, serve } from '../src/browser.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const RESULTS = path.join(HERE, 'results');
 const TIMES = [3.0, 6.3, 11.7, 19.2];
 const FIGURE_T = 6.3; // instant saved as images for the article
-const CONFIGS = ['code', 'hybrid?tex=png', 'hybrid?tex=webp', 'hybrid?tex=uastc', 'hybrid?tex=etc1s', 'files?tex=png', 'files?tex=webp', 'files?tex=uastc', 'files?tex=etc1s'];
+// First config = reference. reportOnly: measured but not gated here (real-code can't match pixel for pixel;
+// its gate is model-level, bench/real/gate.mjs).
+const SETS = {
+  controlled: {
+    configs: ['code', 'hybrid?tex=png', 'hybrid?tex=webp', 'hybrid?tex=uastc', 'hybrid?tex=etc1s', 'files?tex=png', 'files?tex=webp', 'files?tex=uastc', 'files?tex=etc1s'],
+    reportOnly: [], out: 'equivalence', figures: [['files-webp', 'figure-equivalence.png'], ['files-etc1s', 'figure-etc1s.png']],
+  },
+  real: {
+    configs: ['real?props=glb&tex=png', 'real?props=glb&tex=png128', 'real?props=glb&tex=uastc', 'real?props=decompiled', 'real?props=code'],
+    reportOnly: ['real?props=code'], out: 'equivalence-real', figures: [['real-code', 'figure-real.png']],
+  },
+};
+const { values: args } = parseArgs({ options: { set: { type: 'string', default: 'controlled' } } });
+const SET = SETS[/** @type {keyof typeof SETS} */ (args.set)];
+if (!SET) throw new Error(`--set must be one of ${Object.keys(SETS).join(', ')}`);
+const CONFIGS = SET.configs, REF = CONFIGS[0];
 const GATE = { scene: { psnr: 35, within: 0.99 }, vfx: { psnr: 30, within: 0.97 } };
 const TOLERANCE = 8;
 
@@ -40,7 +58,8 @@ const server = await serve({ '': path.join(HERE, 'dist') });
 const browser = await launchChrome();
 await mkdir(path.join(RESULTS, 'frames'), { recursive: true });
 /** @type {Record<string, Record<string, Buffer>>} */ const frames = {};
-const name = (/** @type {string} */ c) => c.replace('?tex=', '-');
+const name = (/** @type {string} */ c) => c.replace(/[?&](props|tex)=/g, '-');
+const CONTROL = `${name(REF)} +1 frame`;
 try {
   for (const scene of [true, false]) {
     for (const config of CONFIGS) {
@@ -56,9 +75,9 @@ try {
         frames[`${scene}:${t}`][config] = Buffer.from(rgba, 'base64');
         if (t === FIGURE_T && !scene) await page.locator('canvas').screenshot({ path: path.join(RESULTS, 'frames', `${name(config)}.png`) });
       }
-      if (config === 'code') { // negative control: one frame (1/60 s) later must NOT pass
+      if (config === REF) { // negative control: one frame (1/60 s) later must NOT pass
         const { rgba } = await page.evaluate((t) => globalThis.__bench.read(t), FIGURE_T + 1 / 60);
-        frames[`${scene}:${FIGURE_T}`]['code +1 frame'] = Buffer.from(rgba, 'base64');
+        frames[`${scene}:${FIGURE_T}`][CONTROL] = Buffer.from(rgba, 'base64');
       }
       await context.close();
     }
@@ -71,10 +90,11 @@ try {
 /** @type {any[]} */ const rows = [];
 for (const [key, byConfig] of Object.entries(frames)) {
   const [scene, t] = key.split(':');
-  for (const config of [...CONFIGS.slice(1), ...(byConfig['code +1 frame'] ? ['code +1 frame'] : [])]) {
-    const r = compare(byConfig.code, byConfig[config]);
+  for (const config of [...CONFIGS.slice(1), ...(byConfig[CONTROL] ? [CONTROL] : [])]) {
+    const r = compare(byConfig[REF], byConfig[config]);
     const gate = scene === 'true' ? GATE.scene : GATE.vfx;
-    rows.push({ config: name(config), effects: scene === 'false', t: Number(t), ...r, pass: r.psnr >= gate.psnr && r.within >= gate.within, control: config === 'code +1 frame' });
+    const pass = r.psnr >= gate.psnr && r.within >= gate.within;
+    rows.push({ config: config === CONTROL ? CONTROL : name(config), effects: scene === 'false', t: Number(t), ...r, pass, control: config === CONTROL, reportOnly: SET.reportOnly.includes(config) });
   }
 }
 const pct = (/** @type {number} */ x) => `${(x * 100).toFixed(2)} %`;
@@ -82,31 +102,32 @@ const db = (/** @type {number} */ x) => (x === Infinity ? '∞' : `${x.toFixed(1
 const lines = [
   '# Visual equivalence gate',
   '',
-  `Reference: \`code\` variant. 960×540, dpr 1, headless Chrome. Instants: ${TIMES.join(', ')} s. Tolerance: ±${TOLERANCE} levels per channel.`,
+  `Reference: \`${name(REF)}\`. 960×540, dpr 1, headless Chrome. Instants: ${TIMES.join(', ')} s. Tolerance: ±${TOLERANCE} levels per channel.`,
   `Pass: scene only PSNR ≥ ${GATE.scene.psnr} dB and ≥ ${GATE.scene.within * 100} % within tolerance; with effects PSNR ≥ ${GATE.vfx.psnr} dB and ≥ ${GATE.vfx.within * 100} %.`,
   '',
   '| variant | effects | t (s) | PSNR | pixels within ±8 | mean abs diff | pass |',
   '|---|---|---:|---:|---:|---:|---|',
   ...rows.sort((a, b) => a.config.localeCompare(b.config) || a.effects - b.effects || a.t - b.t)
-    .map((r) => `| ${r.config} | ${r.effects ? 'yes' : 'no'} | ${r.t} | ${db(r.psnr)} | ${pct(r.within)} | ${r.meanAbs.toFixed(3)} | ${r.control ? (r.pass ? '⚠️ control passed' : 'fails, as it must') : r.pass ? '✅' : '❌'} |`),
+    .map((r) => `| ${r.config} | ${r.effects ? 'yes' : 'no'} | ${r.t} | ${db(r.psnr)} | ${pct(r.within)} | ${r.meanAbs.toFixed(3)} | ${r.control ? (r.pass ? '⚠️ control passed' : 'fails, as it must') : r.reportOnly ? `report only (${r.pass ? 'would pass' : 'would fail'})` : r.pass ? '✅' : '❌'} |`),
   '',
-  '`code +1 frame` is a negative control: the same variant 1/60 s later. It must fail, which shows the gate can tell apart',
+  `\`${CONTROL}\` is a negative control: the reference 1/60 s later. It must fail, which shows the gate can tell apart`,
   'two renders that differ by one frame of motion.',
 ];
-const failed = rows.filter((r) => !r.pass && !r.control);
+if (SET.reportOnly.length) lines.push('', `Report only: ${SET.reportOnly.map(name).join(', ')} — a hand-written imitation cannot match pixel for pixel; it is gated per model (bench/real/gate.mjs).`);
+const failed = rows.filter((r) => !r.pass && !r.control && !r.reportOnly);
 const leaked = rows.filter((r) => r.pass && r.control); // the gate must be able to fail
 const excluded = [...new Set(failed.map((r) => r.config))];
-const admitted = ['code', ...CONFIGS.slice(1).map(name).filter((c) => !excluded.includes(c))]; // phase 5 measures only these
+const admitted = CONFIGS.map(name).filter((c) => !excluded.includes(c)); // phase 5 measures only these (reportOnly: see their own gate)
 lines.push('', `**Admitted** (measured in phase 5): ${admitted.join(', ')}.`, excluded.length ? `**Excluded** (fail the gate): ${excluded.join(', ')}.` : '');
-await writeFile(path.join(RESULTS, 'equivalence.md'), lines.join('\n') + '\n');
-await writeFile(path.join(RESULTS, 'equivalence.json'), JSON.stringify({ admitted, excluded, rows }, (k, v) => (v === Infinity ? null : v), 2));
-// Figures for the article: code | variant | their difference ×10 (ImageMagick, optional).
+await writeFile(path.join(RESULTS, `${SET.out}.md`), lines.join('\n') + '\n');
+await writeFile(path.join(RESULTS, `${SET.out}.json`), JSON.stringify({ admitted, excluded, rows }, (k, v) => (v === Infinity ? null : v), 2));
+// Figures for the article: reference | variant | their difference ×10 (ImageMagick, optional).
 try {
   const f = (/** @type {string} */ n) => path.join(RESULTS, 'frames', `${n}.png`);
-  for (const [variant, figure] of [['files-webp', 'figure-equivalence.png'], ['files-etc1s', 'figure-etc1s.png']]) {
+  for (const [variant, figure] of SET.figures) {
     const diff = f(`diff-${variant}`);
-    execFileSync('convert', [f('code'), f(variant), '-compose', 'difference', '-composite', '-evaluate', 'multiply', '10', diff]);
-    execFileSync('convert', [f('code'), f(variant), diff, '-resize', '640x', '+append', path.join(RESULTS, figure)]);
+    execFileSync('convert', [f(name(REF)), f(variant), '-compose', 'difference', '-composite', '-evaluate', 'multiply', '10', diff]);
+    execFileSync('convert', [f(name(REF)), f(variant), diff, '-resize', '640x', '+append', path.join(RESULTS, figure)]);
   }
 } catch {
   console.log('(ImageMagick `convert` not found: figures skipped)');

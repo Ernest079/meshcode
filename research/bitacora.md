@@ -251,3 +251,183 @@ Carga preliminar (**SwiftShader, no válida como dato de tiempos**): «assets li
 ### Configuraciones que pasan a la fase 5
 
 `code`, `hybrid·png`, `hybrid·webp`, `hybrid·uastc`, `files·png`, `files·webp`, `files·uastc`. Total: **7**. ETC1S se reporta solo en bytes y VRAM, marcado como excluido.
+
+---
+
+## 2026-11-23 · Fase 4.2 — Estudio con assets reales (CC0) frente a su imitación en código
+
+### Objetivo
+
+En la 4.1 los assets salieron de nuestro propio código, con texturas de ruido, que es el terreno favorable al código. Aquí se invierte el planteamiento: se parte de **modelos hechos por artistas** y se mide qué cuesta llevarlos a código y qué se gana o pierde en runtime.
+
+### Assets (descargados el 2026-11-23 de los repos oficiales en GitHub; licencias en `bench/real/source/`)
+
+| papel en el juego | asset | autor / pack | tris | textura |
+|---|---|---|---:|---|
+| dron (enemigo) | `enemy-flying.glb` | Kenney, Starter-Kit-FPS (CC0) | 544 | atlas de paleta 512², PNG 9 KB |
+| caja | `cargo_A` | Kay Lousberg, KayKit Space Base Bits 1.0 (CC0) | 128 | atlas de paleta 1024², PNG 25 KB |
+| barril | `Barrel_A` | Kay Lousberg, KayKit Prototype Bits 1.0 (CC0) | 384 | atlas de paleta 1024², PNG 29 KB |
+
+La web de Kenney (kenney.nl) responde 403 a clientes automáticos, así que se usó su GitHub oficial (KenneyNL). Los tres modelos son low-poly con **atlas de paleta**: cada cara toma su color de un degradado de la textura mediante UV. Es el estilo dominante en los packs CC0 y es distinto del caso controlado.
+
+### Variantes (solo cambia cómo se entregan los tres props)
+
+El resto del juego es idéntico en todas y va como código: arena, proyectil, efectos por shader y layout por semilla.
+
+| variante | props | cómo se obtiene |
+|---|---|---|
+| **real-glb** (archivos) | GLB original empaquetado + meshopt; atlas en PNG, tal como lo distribuye el artista (sub-condición UASTC) | `bench/real` → build |
+| **real-decompiled** (código de máquina) | módulo JS generado por `meshcode decompile`: geometría como datos base64 + atlas PNG aparte | determinista, sin intervención |
+| **real-code** (código de autor) | imitación paramétrica escrita a mano por el agente (Claude Opus 5.5 en Claude Code), sin texturas | medición del original (`bench/real/measure.mjs`) + ciclo render → comparar (`bench/real/compare.mjs`) |
+
+**Ajuste de tamaño, igual en todas las variantes:** escala uniforme para que la dimensión mayor coincida con la del prop controlado (caja 1,0 m, barril 0,9 m, dron 1,31 m). Los props se apoyan en el suelo y el dron se centra en su origen.
+
+### Umbrales registrados ANTES de escribir las imitaciones
+
+- **real-decompiled frente a real-glb** (conversión exacta): IoU de siluetas ≥ 0,999 en las 6 vistas, y el gate de escena estricto de la 4.1 (PSNR ≥ 35 / 30 dB y ≥ 99 / 97 % a ±8).
+- **real-code frente a real-glb** («perceptualmente comparable», un criterio más laxo declarado como tal), por modelo:
+  - IoU medio de siluetas ≥ 0,90 y cada vista ≥ 0,85 (6 vistas a 256 px, métrica de `fidelity.js`);
+  - error de color medio ≤ 12 niveles (de 255) sobre la intersección de siluetas, en las 4 vistas de `renderViews` (384 px);
+  - además, una hoja comparativa de cada modelo para el juicio humano (tuyo).
+
+  El gate de escena de real-code se **reporta sin criterio de aprobado**, porque una imitación no puede coincidir píxel a píxel.
+- **Costo de autoría que se registra:**
+  - líneas y bytes de cada imitación;
+  - número de iteraciones del ciclo render → comparar;
+  - IoU y error de color tras cada iteración.
+
+### Registro de autoría (real-code)
+
+Medición antes de escribir: `measure.mjs` dio, para cada color de la paleta, sus caras, su extensión y sus normales, y además los perfiles de los anillos y las secciones. Así salieron las primitivas reales:
+
+- el barril es un torno de 12 lados con 17 puntos de perfil;
+- la caja y el torso del dron son **cajas redondeadas**: núcleo 0,1875 con chaflán 0,0625 en la caja; núcleo 0,2 con radio 0,1 en 2 pasos en el torso;
+- los cañones son un perfil de 8 vértices extruido.
+
+Kit compartido (`bench/real/models/kit.js`): apila anillos en una malla facetada con color por cara. Ofrece:
+
+- `loft` (anillos), `box` (caja redondeada) y `plate` (polígono plano);
+- un degradado de paleta;
+- normales suaves por ángulo de pliegue;
+- espejo.
+
+| modelo | iteración | cambio | IoU medio / mín | error de color |
+|---|---|---|---|---:|
+| barril | v1 | torno + degradado lineal, facetado | 1,000 / 1,000 | 5,8 |
+| barril | **v2** | normales suaves alrededor del eje (el corte entre anillos sigue duro) + paradas del degradado medidas | 1,000 / 1,000 | **3,0** |
+| caja | v1 | caja redondeada + corte de color a 0,25 m + etiquetas + tornillo | 1,000 / 1,000 | 7,5 |
+| caja | **v2** | suavizado por pliegue de 50° (el original tiene los chaflanes suaves) | 1,000 / 1,000 | **4,3** |
+| dron | v1 | torso, placa frontal, cara, antena; cañones como bloques | 0,914 / 0,870 | 13,0 ❌ |
+| dron | v2 | cañones rehechos con el perfil medido (soporte octogonal, cuerpo extruido, aleta, mira, boca) | 0,967 / 0,943 | 9,4 |
+| dron | **v3** | placa frontal en dos bandas de color | 0,967 / 0,943 | **9,4** (sin mejora; se detiene aquí) |
+
+**Esfuerzo:** 7 iteraciones del ciclo render → comparar y **191 líneas de código** sin contar comentarios: barril 12, caja 19, dron 61 y el kit compartido 99. Más de la mitad está en el kit, que es reutilizable: un cuarto prop del mismo estilo costaría unas 10–60 líneas.
+
+### Resultado 1 — Gate por modelo (`pnpm bench:real` → `bench/results/real-models.md`, hojas `figure-real-{crate,barrel,drone}.png`)
+
+| prop | entrega | IoU medio | IoU mín | error de color | tris (orig → copia) | veredicto |
+|---|---|---:|---:|---:|---:|---|
+| caja | decompiled | 1,000 | 1,000 | 0,0 | 128 → 128 | ✅ |
+| caja | imitación | 1,000 | 1,000 | 4,3 | 128 → 128 | ✅ |
+| barril | decompiled | 1,000 | 1,000 | 0,0 | 384 → 384 | ✅ |
+| barril | imitación | 1,000 | 1,000 | 3,0 | 384 → 384 | ✅ |
+| dron | decompiled | 1,000 | 1,000 | 0,1 | 544 → 544 | ✅ |
+| dron | imitación | 0,967 | 0,943 | 9,4 | 544 → 570 | ✅ |
+
+Las tres imitaciones pasan el criterio registrado (IoU ≥ 0,90, vistas ≥ 0,85, color ≤ 12). La caja y el barril tienen **la misma silueta exacta y el mismo número de triángulos**: el original ya era paramétrico. El dron, con cara y cañones de detalle, es donde la imitación se separa más.
+
+### Resultado 2 — Gate de escena (`pnpm bench:check --set real` → `bench/results/equivalence-real.md`, figura `figure-real.png`)
+
+Referencia: real-glb·png (el original tal cual).
+
+| configuración | PSNR mín. (escena / con efectos) | píxeles a ±8, mín. | veredicto |
+|---|---:|---:|---|
+| real-glb·png128 (atlas reducido a ≤ 128 px) | 57,0 / 57,1 dB | **100,00 %** | admitida |
+| real-glb·uastc | 49,6 / 50,1 dB | 99,50 % | admitida |
+| real-decompiled | 52,2 / 52,5 dB | 99,80 % | admitida |
+| real-code (imitación; solo se reporta) | 30,5 / 30,6 dB | 92,49 % | se reporta (el gate es por modelo) |
+| control: original a +1 frame | 28,1 / 25,7 dB | 87,40 % | falla, como debe |
+
+**Lectura:** en la escena, la imitación difiere del original con un error medio de 1,4–1,8 niveles. Es la mitad que dos frames consecutivos (3,3–3,8) y está en el rango de ETC1S en la 4.1b. A simple vista los props son los mismos; las diferencias están en el sombreado de las normales y en los degradados.
+
+**Decisión añadida durante la fase (regla 2, mismas buenas prácticas):** los atlas de paleta de los artistas son de 512² y 1024², tamaños excesivos para una paleta de unos 20 colores. La optimización estándar de la vía archivos es **reducir el atlas**. Se añadió `png128`: atlas reducido con filtro de caja a ≤ 128 px. Pasa con 57 dB y el 100 % de los píxeles a ±8, así que se toma como **línea base justa de archivos** en el estudio real. Sin ella, los 12 MiB de VRAM de los atlas serían un artefacto de cómo exportó el artista, no del formato.
+
+### Resultado 3 — Bytes, VRAM y generación (`pnpm bench:static --set real` → `bench/results/static-real.md`)
+
+Solo los props (columna "models" del informe; brotli-11):
+
+| entrega de los props | descarga props | descarga total del juego | VRAM texturas props | VRAM geometría (juego) | generación en CPU |
+|---|---:|---:|---:|---:|---:|
+| **real-code** (imitación) | **2,6 KB** | **179,1 KB** | **0** | 0,32 MB | 8,4 ms (caja 2,5 · barril 2,1 · dron 3,8) |
+| real-glb·png128 (mejor práctica de archivos) | 27,3 KB | 203,8 KB | 0,25 MiB | 0,25 MB | — |
+| real-glb·png (tal como lo exporta el artista) | 69,7 KB | 246,2 KB | 12,00 MiB | 0,25 MB | — |
+| real-decompiled | 70,3 KB (165,7 en crudo) | 246,8 KB | 12,00 MiB | 0,27 MB | — |
+| real-glb·uastc | 267,1 KB (+232,5 KB de transcoder) | 676,1 KB | 3,00 MiB (BC7) | 0,25 MB | — |
+
+La parte común (arena, proyectil, efectos y layout por código) pesa lo mismo en todas: 176,5 KB de JS y 8 MiB de texturas de la arena. Draw calls iguales (50). Triángulos: +1,8 % en la imitación, porque el dron tiene 570 en vez de 544.
+
+Carga preliminar (**SwiftShader, no válida como dato**), mediana de «assets listos»:
+
+- code 113 ms · decompiled 115 · png128 119 · png 130;
+- uastc 268 (transcodificación).
+
+### Resultado 4 — Imitación de un solo intento con un LLM local pequeño (`bench/real/llm-dolphin3/`)
+
+Contraste con la imitación medida e iterada:
+
+- **Montaje:** `meshcode generate` con Ollama `dolphin3` (8B, en CPU). Recibe solo una descripción en texto con medidas y colores (`prompts.json`) y tiene hasta 3 reparaciones automáticas.
+- **Resultado: 0 de 3 utilizables.**
+
+| prop | tiempo | resultado |
+|---|---:|---|
+| caja | 246 s | falla: usa `THREE.BoxBufferGeometry` (eliminado de three.js); en la última reparación no devuelve código |
+| barril | 318 s | ejecuta, pero añade *geometrías* a un `Group` y deja las únicas mallas ocultas: IoU 0,126, sin píxeles en común |
+| dron | 534 s | falla tras 3 reparaciones (`Cannot set properties of undefined`) |
+
+Coincide con la literatura del dossier: APIs obsoletas o inventadas y escenas que no se corresponden con el código [7][8][18]. **No sirve para juzgar a los modelos de frontera**, que no se probaron:
+
+- no hay API key en el equipo;
+- el modelo en la nube de Ollama envía datos fuera, y no se usó sin permiso.
+
+### Observaciones
+
+1. **Con arte low-poly real, el código sigue ganando en bytes, pero la brecha se reduce mucho.**
+   - Props: 2,6 KB de código frente a 27,3 KB de archivos optimizados, **10,5×**.
+   - En el estudio controlado la diferencia era 225× (556 KB de GLB WebP). Ahí la brecha venía de las texturas de ruido; aquí, con texturas de paleta pequeñas, la geometría pesa poco en ambos formatos.
+   - En el juego completo, la imitación descarga un 12 % menos que la mejor vía de archivos (179 frente a 204 KB).
+2. **El arte low-poly de los packs CC0 ya es paramétrico.**
+   - La caja y el barril se reproducen con **la misma silueta exacta y el mismo número de triángulos**, porque el artista modeló un torno de 12 lados y una caja con chaflán.
+   - El color de paleta por UV se traduce directamente a colores de vértice.
+   - Por eso la amenaza «contenido favorable al código» de la 4.1 no desaparece con estos assets. Lo que falta probar es arte orgánico, esculpido o con *skinning*.
+3. **Los atlas de paleta tal como se exportan derrochan VRAM: 70 KB en disco ocupan 12 MiB en GPU.**
+   - Unos 20 colores van guardados en texturas de 1024² RGBA con mipmaps.
+   - La solución por el lado de los archivos es trivial (reducir el atlas a 128 px, 0,25 MiB) y no cambia la imagen: 100 % de píxeles a ±8.
+   - El código con colores de vértice no usa texturas. A igualdad de buenas prácticas, la diferencia de VRAM es mínima (0 frente a 0,25 MiB).
+   - Lección metodológica para el artículo: **comparar contra el archivo «tal cual» infla la ventaja del código.**
+4. **KTX2 no conviene con atlas de paleta.** UASTC descarga 3,8× más que PNG (las paletas planas se comprimen muy bien en PNG y mal en bloques) y suma 232 KB de transcoder. Además ahorra menos VRAM (3 MiB) que simplemente reducir el atlas (0,25 MiB). Es lo contrario de lo que pasaba con las texturas de ruido de la 4.1b.
+5. **El código generado por máquina no es compacto: es datos disfrazados.**
+   - `meshcode decompile` reproduce los modelos exactamente (IoU 1,000), pero pesa lo mismo que el GLB en brotli (70,3 frente a 69,7 KB) y 1,6× más en crudo.
+   - La compacidad del código no viene del formato JS, sino de la **descripción paramétrica** (un torno, una caja redondeada), que requiere entender la forma.
+6. **El costo real de la vía código está en la autoría, no en el runtime.**
+   - Runtime: 8,4 ms de CPU y 0,07 MB más de geometría (colores de vértice y vértices sin indexar). Es poco.
+   - Autoría: medir el original, 191 líneas y 7 iteraciones guiadas por métricas.
+   - Un LLM local pequeño, sin medidas ni iteración visual, no consigue ninguna imitación (0 de 3).
+   - Es justo el punto que separa un juego «hecho solo con código» por un modelo de frontera con herramientas de uno hecho por un modelo pequeño.
+
+### Amenazas a la validez
+
+- **Muestra pequeña y simple:** 3 props low-poly. No incluye personajes, mallas orgánicas, *skinning* ni animaciones.
+- **Quién imita:** las imitaciones las escribió un agente LLM de frontera (Claude Opus 5.5) **con acceso al original** (mide vértices y colores) y con un ciclo de comparación automático. Es el escenario «convertir un asset existente a código», no «crear desde cero». El costo de autoría para un humano sin estas herramientas sería mayor.
+- **Gate más laxo** para la imitación, declarado como «perceptualmente comparable». En la escena (92–94 % a ±8) no pasaría el gate estricto, igual que ETC1S.
+- **LLM local:** una sola ejecución por prop, un solo modelo pequeño y solo texto. No es representativo de los modelos de frontera.
+- **SwiftShader:** sin datos de tiempo válidos (fase 5).
+
+### Configuraciones del estudio real que pasan a la fase 5
+
+`real-code`, `real-glb·png128` (línea base justa), `real-glb·png` (tal cual), `real-glb·uastc` y `real-decompiled`.
+
+### Pendientes
+
+- **Fase 5 · arnés de medición** (GPU real, sin vsync, red limitada, ≥ 30 repeticiones, Android) sobre las 7 configuraciones controladas y las 5 reales.
+- **Opcional:** imitación de un solo intento con un modelo de frontera, para comparar con dolphin3. Requiere tu API key o tu permiso para usar el modelo en la nube de Ollama.
+- **Opcional:** un asset orgánico o animado (un personaje CC0 de Quaternius o KayKit) para poner a prueba la observación 2.
