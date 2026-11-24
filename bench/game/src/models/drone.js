@@ -4,7 +4,7 @@
 /** @param {typeof import('three')} THREE */
 export default (THREE) => {
   const canvas = Object.assign(document.createElement('canvas'), { width: 256, height: 64 });
-  const c = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
+  const c = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { willReadFrequently: true })); // software canvas: drawn once, uploaded once (see bitacora, fase 5)
   c.fillStyle = '#d8dde3';
   c.fillRect(0, 0, 256, 64);
   c.fillStyle = '#c0392b';

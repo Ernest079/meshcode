@@ -20,7 +20,9 @@
     "bench:build": "node bench/build.mjs",
     "bench:check": "node bench/equivalence.mjs",
     "bench:static": "node bench/static.mjs",
-    "bench:real": "node bench/real/gate.mjs"
+    "bench:real": "node bench/real/gate.mjs",
+    "bench:run": "node bench/run.mjs",
+    "bench:preview": "vite preview --config bench/vite.config.js --port 4173"
   },
   "keywords": [
     "three.js",

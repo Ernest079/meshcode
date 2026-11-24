@@ -1,0 +1,57 @@
+{
+  "started": "2026-11-24T15:31:41.233Z",
+  "finished": "2026-11-24T15:33:16.271Z",
+  "chrome": "158.0.8127.36",
+  "renderer": "ANGLE (AMD, AMD Radeon RX 6500 XT (radeonsi navi24 LLVM 20.1.2), OpenGL 4.6)",
+  "flags": [
+    "--use-gl=angle",
+    "--use-angle=gl",
+    "--ignore-gpu-blocklist",
+    "--disable-gpu-vsync",
+    "--disable-frame-rate-limit",
+    "--enable-precise-memory-info"
+  ],
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "reps": 3,
+  "seconds": 4,
+  "seed": 2026,
+  "configs": [
+    "code",
+    "code?cpucanvas",
+    "code?release",
+    "files-webp",
+    "real-code",
+    "real-code&cpucanvas"
+  ],
+  "conditions": {
+    "cold": "new browser, Mesa shader cache off",
+    "warm": "reload, caches warm",
+    "fast4g": {
+      "offline": false,
+      "latency": 165,
+      "downloadThroughput": 1012500,
+      "uploadThroughput": 168750
+    },
+    "cpu4x": "Emulation.setCPUThrottlingRate 4"
+  },
+  "resolutions": [
+    [
+      "1080p",
+      1
+    ],
+    [
+      "4k",
+      2
+    ]
+  ],
+  "maxLoad": 8,
+  "waitedSeconds": 0,
+  "encodings": {
+    "br": 498,
+    "identity": 24
+  },
+  "vram": "amdgpu drm-memory-vram of the run's Chrome GPU process (fdinfo), minus a blank page"
+}

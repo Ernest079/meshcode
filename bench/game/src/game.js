@@ -266,7 +266,6 @@ export async function start(variant) {
   for (const name of ['mc:start', 'mc:assets', 'mc:world', 'mc:compiled', 'mc:first-frame']) bench.phases[name.slice(3)] = mark(name);
   bench.render = { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, programs: renderer.info.programs?.length ?? 0 };
   bench.memory = { ...renderer.info.memory, ...gpuBytes(scene) };
-
   if (freeze !== null) {
     /** Render instant t (default: ?freeze) and read the frame back, for the equivalence gate. */
     bench.read = (t = freeze) => {
@@ -283,22 +282,40 @@ export async function start(variant) {
     return;
   }
 
-  // Timed run: wall-clock t, one frame per animation frame; frame times recorded for the harness.
+  // Timed run: wall-clock t, one frame per animation frame. Recorded for the harness (bench/run.mjs), per frame:
+  //   frames — interval between animation frames (ms); cpu — main-thread time for update + render submission;
+  //   gpu — GPU time of the frame's render (EXT_disjoint_timer_query_webgl2, results read back a few frames later).
   const seconds = Number(params.get('seconds') ?? 30);
-  /** @type {number[]} */ const frames = [];
+  /** @type {number[]} */ const frames = [], cpu = [], gpu = [];
+  const gl = /** @type {WebGL2RenderingContext} */ (renderer.getContext());
+  const timer = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  /** @type {WebGLQuery[]} */ const pending = [];
+  const collect = () => {
+    while (pending.length && gl.getQueryParameter(pending[0], gl.QUERY_RESULT_AVAILABLE)) {
+      const q = /** @type {WebGLQuery} */ (pending.shift());
+      if (!gl.getParameter(timer.GPU_DISJOINT_EXT)) gpu.push(gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6);
+      gl.deleteQuery(q);
+    }
+  };
   const t0 = performance.now();
   let prev = t0;
+  bench.timer = !!timer;
   bench.ready = true;
   renderer.setAnimationLoop((now) => {
     const t = (now - t0) / 1000;
     if (t >= seconds) {
       renderer.setAnimationLoop(null);
-      bench.frames = frames;
-      bench.done = true;
+      Object.assign(bench, { frames, cpu, gpu, done: true });
       return;
     }
-    update(t);
+    const c0 = performance.now();
+    update(t); // CPU only (matrices, attributes); the uploads happen inside render, so the query starts here
+    const q = timer && gl.createQuery();
+    if (q) gl.beginQuery(timer.TIME_ELAPSED_EXT, q);
     renderer.render(scene, camera);
+    if (q) { gl.endQuery(timer.TIME_ELAPSED_EXT); pending.push(q); }
+    cpu.push(performance.now() - c0);
+    if (timer) collect();
     frames.push(now - prev);
     prev = now;
   });

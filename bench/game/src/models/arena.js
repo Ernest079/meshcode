@@ -10,7 +10,7 @@ export default (THREE) => {
   /** Canvas texture helper: draw, add per-pixel grain, wrap as an sRGB repeating texture. */
   const texture = (/** @type {number} */ w, /** @type {number} */ h, /** @type {(c: CanvasRenderingContext2D) => void} */ draw, /** @type {number} */ grain, /** @type {number} */ rx, /** @type {number} */ ry) => {
     const canvas = Object.assign(document.createElement('canvas'), { width: w, height: h });
-    const c = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
+    const c = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { willReadFrequently: true })); // software canvas: drawn once, uploaded once (see bitacora, fase 5)
     draw(c);
     const img = c.getImageData(0, 0, w, h);
     for (let i = 0; i < img.data.length; i += 4) {

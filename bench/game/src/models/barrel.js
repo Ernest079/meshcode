@@ -8,7 +8,7 @@ export default (THREE) => {
   const radius = (/** @type {number} */ y) => ENDS + (BELLY - ENDS) * Math.cos((Math.PI * y) / HEIGHT);
 
   const canvas = Object.assign(document.createElement('canvas'), { width: 64, height: 256 });
-  const c = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
+  const c = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { willReadFrequently: true })); // software canvas: drawn once, uploaded once (see bitacora, fase 5)
   c.fillStyle = '#8a5a33';
   c.fillRect(0, 0, 64, 256);
   for (let i = 0; i < 18; i++) {

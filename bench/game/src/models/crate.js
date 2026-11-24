@@ -5,7 +5,7 @@ export default (THREE) => {
   let seed = 21;
   const rand = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
   const canvas = Object.assign(document.createElement('canvas'), { width: 512, height: 512 });
-  const c = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d'));
+  const c = /** @type {CanvasRenderingContext2D} */ (canvas.getContext('2d', { willReadFrequently: true })); // software canvas: drawn once, uploaded once (see bitacora, fase 5)
   c.fillStyle = '#9a6b3c';
   c.fillRect(0, 0, 512, 512);
   for (let k = 0; k < 6; k++) { // planks with grain streaks

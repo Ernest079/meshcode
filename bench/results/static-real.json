@@ -5,92 +5,92 @@
     "real?props=code": {
       "reps": [
         {
-          "start": 36.69999999925494,
-          "assets": 122.79999999888241,
-          "world": 125,
-          "compiled": 147.19999999925494,
-          "first-frame": 199.09999999962747,
-          "downloaded": 18,
-          "heap": 13095439,
+          "start": 33.10000000009313,
+          "assets": 117.20000000018626,
+          "world": 119.30000000004657,
+          "compiled": 141.10000000009313,
+          "first-frame": 196,
+          "downloaded": 16.9000000001397,
+          "heap": 13085951,
           "generate": {
-            "arena": 48.19999999925494,
-            "bolt": 0.7000000011175871,
-            "crate": 2.099999999627471,
-            "barrel": 2.200000001117587,
-            "drone": 3.699999999254942
+            "arena": 47.5,
+            "bolt": 0.5,
+            "crate": 2.699999999953434,
+            "barrel": 1.9000000001396984,
+            "drone": 3.5999999998603016
           }
         },
         {
-          "start": 26.700000001117587,
-          "assets": 110.40000000037253,
-          "world": 112.60000000149012,
-          "compiled": 134.2000000011176,
-          "first-frame": 248.5,
-          "downloaded": 10.5,
-          "heap": 13090159,
+          "start": 29.899999999906868,
+          "assets": 116.60000000009313,
+          "world": 119.80000000004657,
+          "compiled": 143.60000000009313,
+          "first-frame": 263.5,
+          "downloaded": 13.100000000093132,
+          "heap": 13097515,
           "generate": {
-            "arena": 44.90000000037253,
-            "bolt": 0.6999999992549419,
-            "crate": 2.5,
-            "barrel": 1.800000000745058,
-            "drone": 3.799999998882413
+            "arena": 45.5,
+            "bolt": 0.6000000000931323,
+            "crate": 2.8999999999068677,
+            "barrel": 2.6000000000931323,
+            "drone": 5.699999999953434
           }
         },
         {
-          "start": 30.59999999962747,
-          "assets": 112.69999999925494,
-          "world": 115,
-          "compiled": 136.5,
-          "first-frame": 259.59999999962747,
-          "downloaded": 14,
-          "heap": 13047055,
+          "start": 31.899999999906868,
+          "assets": 120.10000000009313,
+          "world": 123.19999999995343,
+          "compiled": 146.39999999990687,
+          "first-frame": 261.89999999990687,
+          "downloaded": 13.300000000046566,
+          "heap": 13059851,
           "generate": {
-            "arena": 45.79999999888241,
-            "bolt": 0.7000000011175871,
-            "crate": 2.199999999254942,
-            "barrel": 2.100000001490116,
-            "drone": 4.5
+            "arena": 46.800000000046566,
+            "bolt": 0.6000000000931323,
+            "crate": 2.3999999999068677,
+            "barrel": 3,
+            "drone": 7.900000000139698
           }
         },
         {
-          "start": 31.199999999254942,
-          "assets": 115,
-          "world": 117.19999999925494,
-          "compiled": 138.80000000074506,
-          "first-frame": 266.59999999962747,
-          "downloaded": 13.800000000745058,
-          "heap": 13087499,
+          "start": 31.5,
+          "assets": 115.39999999990687,
+          "world": 117.80000000004657,
+          "compiled": 140.69999999995343,
+          "first-frame": 271.39999999990687,
+          "downloaded": 16.100000000093132,
+          "heap": 13134687,
           "generate": {
-            "arena": 46.19999999925494,
-            "bolt": 0.6000000014901161,
-            "crate": 2.5,
-            "barrel": 1.800000000745058,
-            "drone": 3.599999999627471
+            "arena": 46.300000000046566,
+            "bolt": 0.5999999998603016,
+            "crate": 2.2999999998137355,
+            "barrel": 2.1000000000931323,
+            "drone": 5.300000000046566
           }
         },
         {
-          "start": 28.09999999962747,
-          "assets": 111.79999999888241,
-          "world": 114.69999999925494,
-          "compiled": 138,
-          "first-frame": 262.5,
-          "downloaded": 11.199999999254942,
-          "heap": 13083743,
+          "start": 28.600000000093132,
+          "assets": 110.9000000001397,
+          "world": 112.80000000004657,
+          "compiled": 134.80000000004657,
+          "first-frame": 249.5,
+          "downloaded": 12.5,
+          "heap": 13130003,
           "generate": {
-            "arena": 46,
-            "bolt": 0.599999999627471,
-            "crate": 2.5,
-            "barrel": 3.199999999254942,
-            "drone": 5.099999999627471
+            "arena": 44.89999999990687,
+            "bolt": 0.6999999999534339,
+            "crate": 2.300000000046566,
+            "barrel": 1.8999999999068677,
+            "drone": 3.699999999953434
           }
         }
       ],
       "files": [
         "real.html",
-        "assets/real-DgBChYGo.js",
-        "assets/bolt-CvUqYsNy.js",
-        "assets/assets-B9m3q2SH.js",
-        "assets/game-BgSfE8N6.js",
+        "assets/real-CMVW1Cql.js",
+        "assets/bolt-Sgpiy9dp.js",
+        "assets/assets-YJz--c9H.js",
+        "assets/game-B8bYft6W.js",
         "assets/three.core-BF58tRDi.js",
         "assets/props-Bh7urd7f.js"
       ],
@@ -109,9 +109,9 @@
       "transfer": {
         "by": {
           "code": {
-            "raw": 841984,
-            "gzip": 219491,
-            "br": 180747
+            "raw": 842512,
+            "gzip": 219748,
+            "br": 180899
           },
           "models": {
             "raw": 6673,
@@ -120,9 +120,9 @@
           }
         },
         "total": {
-          "raw": 848657,
-          "gzip": 222450,
-          "br": 183379
+          "raw": 849185,
+          "gzip": 222707,
+          "br": 183531
         },
         "requests": 7
       }
@@ -130,83 +130,83 @@
     "real?props=decompiled": {
       "reps": [
         {
-          "start": 34.09999999962747,
-          "assets": 126.19999999925494,
-          "world": 128.40000000037253,
-          "compiled": 149.90000000037253,
-          "first-frame": 262.30000000074506,
-          "downloaded": 115,
-          "heap": 13814257,
+          "start": 28.0999999998603,
+          "assets": 108.69999999995343,
+          "world": 110.69999999995343,
+          "compiled": 132.79999999981374,
+          "first-frame": 236,
+          "downloaded": 98.89999999990687,
+          "heap": 13760485,
           "generate": {
-            "arena": 52.399999998509884,
-            "bolt": 0.6000000014901161
+            "arena": 45.199999999953434,
+            "bolt": 0.6000000000931323
           }
         },
         {
-          "start": 31.90000000037253,
-          "assets": 113.5,
-          "world": 115.5,
-          "compiled": 136.09999999962747,
-          "first-frame": 275.19999999925494,
-          "downloaded": 101.59999999962747,
-          "heap": 13697101,
+          "start": 27.600000000093132,
+          "assets": 110.60000000009313,
+          "world": 112.5,
+          "compiled": 133.10000000009313,
+          "first-frame": 274,
+          "downloaded": 103.60000000009313,
+          "heap": 14192521,
           "generate": {
-            "arena": 46.09999999962747,
-            "bolt": 0.599999999627471
-          }
-        },
-        {
-          "start": 36.399999998509884,
-          "assets": 124.09999999962747,
-          "world": 126.5,
-          "compiled": 148.69999999925494,
-          "first-frame": 288.09999999962747,
-          "downloaded": 113.19999999925494,
-          "heap": 12986129,
-          "generate": {
-            "arena": 49.5,
+            "arena": 46.39999999990687,
             "bolt": 0.5
           }
         },
         {
-          "start": 31.700000001117587,
-          "assets": 114.80000000074506,
-          "world": 116.70000000111759,
-          "compiled": 142.30000000074506,
-          "first-frame": 271.5,
-          "downloaded": 109.5,
-          "heap": 13844149,
+          "start": 26.4000000001397,
+          "assets": 111.20000000018626,
+          "world": 113.30000000004657,
+          "compiled": 133.9000000001397,
+          "first-frame": 278,
+          "downloaded": 104.5,
+          "heap": 14168565,
           "generate": {
-            "arena": 46.09999999962747,
-            "bolt": 0.6999999992549419
+            "arena": 46.4000000001397,
+            "bolt": 0.6999999999534339
           }
         },
         {
-          "start": 27.600000001490116,
-          "assets": 109.70000000111759,
-          "world": 111.70000000111759,
-          "compiled": 133.2000000011176,
-          "first-frame": 271.2000000011176,
-          "downloaded": 96.70000000111759,
-          "heap": 13837029,
+          "start": 32.60000000009313,
+          "assets": 118.60000000009313,
+          "world": 120.69999999995343,
+          "compiled": 141.69999999995343,
+          "first-frame": 285,
+          "downloaded": 107.4000000001397,
+          "heap": 13675013,
           "generate": {
-            "arena": 45.90000000037253,
-            "bolt": 0.599999999627471
+            "arena": 47.199999999953434,
+            "bolt": 0.6000000000931323
+          }
+        },
+        {
+          "start": 32.199999999953434,
+          "assets": 117.69999999995343,
+          "world": 120.19999999995343,
+          "compiled": 142.0999999998603,
+          "first-frame": 289.5999999998603,
+          "downloaded": 106.19999999995343,
+          "heap": 13507389,
+          "generate": {
+            "arena": 47.39999999990687,
+            "bolt": 0.7000000001862645
           }
         }
       ],
       "files": [
         "real.html",
-        "assets/real-DgBChYGo.js",
-        "assets/bolt-CvUqYsNy.js",
-        "assets/assets-B9m3q2SH.js",
-        "assets/game-BgSfE8N6.js",
+        "assets/real-CMVW1Cql.js",
+        "assets/bolt-Sgpiy9dp.js",
+        "assets/assets-YJz--c9H.js",
+        "assets/game-B8bYft6W.js",
         "assets/three.core-BF58tRDi.js",
-        "real/decompiled/barrel.js",
         "real/decompiled/crate.js",
+        "real/decompiled/barrel.js",
         "real/decompiled/drone.js",
-        "real/decompiled/barrel.tex0.png",
         "real/decompiled/crate.tex0.png",
+        "real/decompiled/barrel.tex0.png",
         "real/decompiled/drone.tex0.png"
       ],
       "render": {
@@ -224,9 +224,9 @@
       "transfer": {
         "by": {
           "code": {
-            "raw": 841984,
-            "gzip": 219491,
-            "br": 180747
+            "raw": 842512,
+            "gzip": 219748,
+            "br": 180899
           },
           "models": {
             "raw": 169657,
@@ -235,9 +235,9 @@
           }
         },
         "total": {
-          "raw": 1011641,
-          "gzip": 297873,
-          "br": 252711
+          "raw": 1012169,
+          "gzip": 298130,
+          "br": 252863
         },
         "requests": 12
       }
@@ -245,77 +245,77 @@
     "real?props=glb&tex=png": {
       "reps": [
         {
-          "start": 31.59999999962747,
-          "assets": 138.7000000011176,
-          "world": 142.30000000074506,
-          "compiled": 163.59999999962747,
-          "first-frame": 293.59999999962747,
-          "downloaded": 112.5,
-          "heap": 13053000,
+          "start": 30.0999999998603,
+          "assets": 121.69999999995343,
+          "world": 123.89999999990687,
+          "compiled": 146.5999999998603,
+          "first-frame": 275.39999999990687,
+          "downloaded": 104.89999999990687,
+          "heap": 13087144,
           "generate": {
-            "arena": 46.30000000074506,
-            "bolt": 0.5
+            "arena": 45.0999999998603,
+            "bolt": 0.6000000000931323
           }
         },
         {
-          "start": 31.100000001490116,
-          "assets": 131.10000000149012,
-          "world": 133.30000000074506,
-          "compiled": 155.5,
-          "first-frame": 279.5,
-          "downloaded": 113.10000000149012,
-          "heap": 13084552,
+          "start": 26.399999999906868,
+          "assets": 118.89999999990687,
+          "world": 121.29999999981374,
+          "compiled": 143.0999999998603,
+          "first-frame": 266.79999999981374,
+          "downloaded": 102.0999999998603,
+          "heap": 13078336,
           "generate": {
-            "arena": 47.19999999925494,
-            "bolt": 0.6999999992549419
+            "arena": 46.799999999813735,
+            "bolt": 0.8000000000465661
           }
         },
         {
-          "start": 28.200000001117587,
-          "assets": 123.80000000074506,
-          "world": 126,
-          "compiled": 147.80000000074506,
-          "first-frame": 271.7000000011176,
-          "downloaded": 105.30000000074506,
-          "heap": 13035896,
+          "start": 26.899999999906868,
+          "assets": 121.19999999995343,
+          "world": 123.39999999990687,
+          "compiled": 145.10000000009313,
+          "first-frame": 278.39999999990687,
+          "downloaded": 104.5,
+          "heap": 13057564,
           "generate": {
-            "arena": 45.40000000037253,
-            "bolt": 0.5
+            "arena": 46.10000000009313,
+            "bolt": 0.6000000000931323
           }
         },
         {
-          "start": 35.69999999925494,
-          "assets": 130.2999999988824,
-          "world": 132.5,
-          "compiled": 153.59999999962747,
-          "first-frame": 278.90000000037253,
-          "downloaded": 112.79999999888241,
-          "heap": 13071276,
+          "start": 32,
+          "assets": 123,
+          "world": 125.19999999995343,
+          "compiled": 147.30000000004657,
+          "first-frame": 277.30000000004657,
+          "downloaded": 106.89999999990687,
+          "heap": 13075844,
           "generate": {
-            "arena": 46.19999999925494,
-            "bolt": 0.599999999627471
+            "arena": 45.800000000046566,
+            "bolt": 0.6999999999534339
           }
         },
         {
-          "start": 26.59999999962747,
-          "assets": 124,
-          "world": 126.19999999925494,
-          "compiled": 150.7999999988824,
-          "first-frame": 288,
-          "downloaded": 105.69999999925494,
-          "heap": 13081788,
+          "start": 34.5,
+          "assets": 133.0999999998603,
+          "world": 135.5999999998603,
+          "compiled": 157.0999999998603,
+          "first-frame": 291.0999999998603,
+          "downloaded": 114.79999999981374,
+          "heap": 13061012,
           "generate": {
-            "arena": 48.30000000074506,
-            "bolt": 0.7999999988824129
+            "arena": 49.300000000046566,
+            "bolt": 0.6999999999534339
           }
         }
       ],
       "files": [
         "real.html",
-        "assets/real-DgBChYGo.js",
-        "assets/bolt-CvUqYsNy.js",
-        "assets/assets-B9m3q2SH.js",
-        "assets/game-BgSfE8N6.js",
+        "assets/real-CMVW1Cql.js",
+        "assets/bolt-Sgpiy9dp.js",
+        "assets/assets-YJz--c9H.js",
+        "assets/game-B8bYft6W.js",
         "assets/three.core-BF58tRDi.js",
         "assets/real/png/crate.glb",
         "assets/real/png/barrel.glb",
@@ -336,9 +336,9 @@
       "transfer": {
         "by": {
           "code": {
-            "raw": 841984,
-            "gzip": 219491,
-            "br": 180747
+            "raw": 842512,
+            "gzip": 219748,
+            "br": 180899
           },
           "models": {
             "raw": 103200,
@@ -347,9 +347,9 @@
           }
         },
         "total": {
-          "raw": 945184,
-          "gzip": 294518,
-          "br": 252089
+          "raw": 945712,
+          "gzip": 294775,
+          "br": 252241
         },
         "requests": 9
       }
@@ -357,81 +357,81 @@
     "real?props=glb&tex=png128": {
       "reps": [
         {
-          "start": 29,
-          "assets": 121.30000000074506,
-          "world": 124,
-          "compiled": 148.59999999962747,
-          "first-frame": 286,
-          "downloaded": 106.40000000037253,
-          "heap": 12879453,
+          "start": 25.699999999953434,
+          "assets": 111,
+          "world": 113.30000000004657,
+          "compiled": 135.10000000009313,
+          "first-frame": 280.30000000004657,
+          "downloaded": 101,
+          "heap": 12895985,
           "generate": {
-            "arena": 45.30000000074506,
-            "bolt": 0.599999999627471
+            "arena": 45.5999999998603,
+            "bolt": 0.7000000001862645
           }
         },
         {
-          "start": 26.09999999962747,
-          "assets": 110.69999999925494,
-          "world": 113.29999999888241,
-          "compiled": 134.89999999850988,
-          "first-frame": 252.39999999850988,
-          "downloaded": 101.29999999888241,
-          "heap": 12902969,
+          "start": 30.399999999906868,
+          "assets": 115.39999999990687,
+          "world": 117.5999999998603,
+          "compiled": 139.30000000004657,
+          "first-frame": 257.19999999995343,
+          "downloaded": 106.69999999995343,
+          "heap": 12913493,
           "generate": {
-            "arena": 45.59999999962747,
-            "bolt": 0.5
+            "arena": 45.699999999953434,
+            "bolt": 0.6999999999534339
           }
         },
         {
-          "start": 26.199999999254942,
-          "assets": 114.59999999962747,
-          "world": 117,
-          "compiled": 138.59999999962747,
-          "first-frame": 258.69999999925494,
-          "downloaded": 102.80000000074506,
-          "heap": 12900385,
+          "start": 32.0999999998603,
+          "assets": 117.80000000004657,
+          "world": 120,
+          "compiled": 144.0999999998603,
+          "first-frame": 268.69999999995343,
+          "downloaded": 107.5999999998603,
+          "heap": 12950385,
           "generate": {
-            "arena": 46,
-            "bolt": 0.6999999992549419
+            "arena": 45.800000000046566,
+            "bolt": 0.6000000000931323
           }
         },
         {
-          "start": 31.5,
-          "assets": 119.09999999962747,
-          "world": 121.19999999925494,
-          "compiled": 143.69999999925494,
-          "first-frame": 262.90000000037253,
-          "downloaded": 108.69999999925494,
-          "heap": 12897625,
+          "start": 31.700000000186265,
+          "assets": 116.5,
+          "world": 118.9000000001397,
+          "compiled": 142,
+          "first-frame": 259.10000000009313,
+          "downloaded": 108.20000000018626,
+          "heap": 12892613,
           "generate": {
-            "arena": 46.79999999888241,
-            "bolt": 0.599999999627471
+            "arena": 45.60000000009313,
+            "bolt": 0.8999999999068677
           }
         },
         {
-          "start": 31.300000000745058,
-          "assets": 119.70000000111759,
-          "world": 122.30000000074506,
-          "compiled": 146.40000000037253,
-          "first-frame": 300,
-          "downloaded": 108.90000000037253,
-          "heap": 13045317,
+          "start": 27.300000000046566,
+          "assets": 114.10000000009313,
+          "world": 116.70000000018626,
+          "compiled": 138.60000000009313,
+          "first-frame": 258.4000000001397,
+          "downloaded": 104.10000000009313,
+          "heap": 12910429,
           "generate": {
-            "arena": 46.69999999925494,
-            "bolt": 0.7000000011175871
+            "arena": 45.300000000046566,
+            "bolt": 0.6999999999534339
           }
         }
       ],
       "files": [
         "real.html",
-        "assets/real-DgBChYGo.js",
-        "assets/bolt-CvUqYsNy.js",
-        "assets/assets-B9m3q2SH.js",
-        "assets/game-BgSfE8N6.js",
+        "assets/real-CMVW1Cql.js",
+        "assets/bolt-Sgpiy9dp.js",
+        "assets/assets-YJz--c9H.js",
+        "assets/game-B8bYft6W.js",
         "assets/three.core-BF58tRDi.js",
         "assets/real/png128/crate.glb",
-        "assets/real/png128/drone.glb",
-        "assets/real/png128/barrel.glb"
+        "assets/real/png128/barrel.glb",
+        "assets/real/png128/drone.glb"
       ],
       "render": {
         "calls": 50,
@@ -448,20 +448,20 @@
       "transfer": {
         "by": {
           "code": {
-            "raw": 841984,
-            "gzip": 219491,
-            "br": 180747
+            "raw": 842512,
+            "gzip": 219748,
+            "br": 180899
           },
           "models": {
             "raw": 47824,
-            "gzip": 30346,
-            "br": 27950
+            "gzip": 30344,
+            "br": 27838
           }
         },
         "total": {
-          "raw": 889808,
-          "gzip": 249837,
-          "br": 208697
+          "raw": 890336,
+          "gzip": 250092,
+          "br": 208737
         },
         "requests": 9
       }
@@ -469,81 +469,81 @@
     "real?props=glb&tex=uastc": {
       "reps": [
         {
-          "start": 25.90000000037253,
-          "assets": 267.5,
-          "world": 270.1000000014901,
-          "compiled": 292.1000000014901,
-          "first-frame": 412.6000000014901,
-          "downloaded": 107.80000000074506,
-          "heap": 17904936,
+          "start": 29,
+          "assets": 269.20000000018626,
+          "world": 274.10000000009313,
+          "compiled": 299.5,
+          "first-frame": 427.70000000018626,
+          "downloaded": 112.30000000004657,
+          "heap": 17874232,
           "generate": {
-            "arena": 46.20000000111759,
-            "bolt": 0.6999999992549419
+            "arena": 46.199999999953434,
+            "bolt": 0.5999999998603016
           }
         },
         {
-          "start": 26.90000000037253,
-          "assets": 268.09999999962747,
-          "world": 270.40000000037253,
-          "compiled": 292,
-          "first-frame": 425,
-          "downloaded": 109.80000000074506,
-          "heap": 17873900,
+          "start": 30.5,
+          "assets": 278.0999999998603,
+          "world": 280.5999999998603,
+          "compiled": 302.89999999990687,
+          "first-frame": 429.79999999981374,
+          "downloaded": 114.19999999995343,
+          "heap": 17908428,
           "generate": {
-            "arena": 46.90000000037253,
-            "bolt": 0.599999999627471
+            "arena": 47.700000000186265,
+            "bolt": 0.6000000000931323
           }
         },
         {
-          "start": 28.59999999962747,
-          "assets": 283.09999999962747,
-          "world": 285.40000000037253,
-          "compiled": 306.2999999988824,
-          "first-frame": 425.59999999962747,
-          "downloaded": 112.19999999925494,
-          "heap": 18641828,
+          "start": 28.300000000046566,
+          "assets": 268.60000000009313,
+          "world": 271,
+          "compiled": 294.80000000004657,
+          "first-frame": 425.30000000004657,
+          "downloaded": 114.10000000009313,
+          "heap": 18028204,
           "generate": {
-            "arena": 45.69999999925494,
-            "bolt": 0.6999999992549419
+            "arena": 45.5999999998603,
+            "bolt": 0.6000000000931323
           }
         },
         {
-          "start": 29.300000000745058,
-          "assets": 257.5,
-          "world": 259.80000000074506,
-          "compiled": 282,
-          "first-frame": 408.7000000011176,
-          "downloaded": 111.80000000074506,
-          "heap": 17868684,
+          "start": 32.699999999953434,
+          "assets": 263.10000000009313,
+          "world": 265.4000000001397,
+          "compiled": 286.60000000009313,
+          "first-frame": 414,
+          "downloaded": 118.69999999995343,
+          "heap": 17883056,
           "generate": {
-            "arena": 45.600000001490116,
-            "bolt": 0.599999999627471
+            "arena": 49.39999999990687,
+            "bolt": 0.6000000000931323
           }
         },
         {
-          "start": 36.20000000111759,
-          "assets": 291.59999999962747,
-          "world": 293.80000000074506,
-          "compiled": 314.90000000037253,
-          "first-frame": 437.90000000037253,
-          "downloaded": 119.5,
-          "heap": 18792104,
+          "start": 32.4000000001397,
+          "assets": 247.70000000018626,
+          "world": 250.10000000009313,
+          "compiled": 272.80000000004657,
+          "first-frame": 401.80000000004657,
+          "downloaded": 113.5,
+          "heap": 17943008,
           "generate": {
-            "arena": 46.5,
-            "bolt": 0.599999999627471
+            "arena": 45.699999999953434,
+            "bolt": 1.1000000000931323
           }
         }
       ],
       "files": [
         "real.html",
-        "assets/real-DgBChYGo.js",
-        "assets/bolt-CvUqYsNy.js",
-        "assets/assets-B9m3q2SH.js",
-        "assets/game-BgSfE8N6.js",
+        "assets/real-CMVW1Cql.js",
+        "assets/bolt-Sgpiy9dp.js",
+        "assets/assets-YJz--c9H.js",
+        "assets/game-B8bYft6W.js",
         "assets/three.core-BF58tRDi.js",
         "assets/KTX2Loader-DY-RVu2X.js",
-        "assets/real/uastc/drone.glb",
         "assets/real/uastc/crate.glb",
+        "assets/real/uastc/drone.glb",
         "assets/real/uastc/barrel.glb",
         "assets/basis_transcoder-o4Hde_L7.js",
         "assets/basis_transcoder-VXdx5NbI.wasm"
@@ -565,9 +565,9 @@
       "transfer": {
         "by": {
           "code": {
-            "raw": 1486300,
-            "gzip": 506383,
-            "br": 418778
+            "raw": 1486828,
+            "gzip": 506640,
+            "br": 418930
           },
           "models": {
             "raw": 295576,
@@ -576,9 +576,9 @@
           }
         },
         "total": {
-          "raw": 1781876,
-          "gzip": 783189,
-          "br": 692286
+          "raw": 1782404,
+          "gzip": 783446,
+          "br": 692438
         },
         "requests": 12
       }

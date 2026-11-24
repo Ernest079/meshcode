@@ -2,7 +2,7 @@
 
 Cuaderno de laboratorio del estudio. Cada entrada registra qué se hizo, las decisiones y su motivo, los resultados con su procedencia (comando que los regenera), las observaciones y las amenazas a la validez detectadas. Las cifras citadas salen de `bench/results/`, que se regenera con los comandos indicados.
 
-Equipo: Intel i3-13100F, AMD Radeon RX 6400/6500 XT, 15 GB RAM, Linux, Google Chrome 158, Node 22, three.js 0.187.0.
+Equipo: Intel i3-13100F (4 núcleos / 8 hilos), AMD Radeon RX 6500 XT (navi24, Mesa radeonsi, LLVM 20.1.2), 15 GB RAM, Linux (X11, Cinnamon), Google Chrome 158.0.8127.36, Node 22, three.js 0.187.0.
 
 ---
 
@@ -431,3 +431,216 @@ Coincide con la literatura del dossier: APIs obsoletas o inventadas y escenas qu
 - **Fase 5 · arnés de medición** (GPU real, sin vsync, red limitada, ≥ 30 repeticiones, Android) sobre las 7 configuraciones controladas y las 5 reales.
 - **Opcional:** imitación de un solo intento con un modelo de frontera, para comparar con dolphin3. Requiere tu API key o tu permiso para usar el modelo en la nube de Ollama.
 - **Opcional:** un asset orgánico o animado (un personaje CC0 de Quaternius o KayKit) para poner a prueba la observación 2.
+
+---
+
+## 2026-11-23 · Fase 5 — Arnés de medición en PC (Android queda fuera por ahora)
+
+### Objetivo
+
+Medir **tiempos reales**, ya no estimaciones: carga (frío, caliente, red limitada y CPU lenta), rendimiento por frame en CPU y GPU, y VRAM real. Se hace sobre las configuraciones admitidas por los gates: 7 del estudio controlado y 5 del real.
+
+### Decisiones registradas antes de la corrida completa
+
+1. **GPU real.** Chrome headless con `--use-gl=angle --use-angle=gl --ignore-gpu-blocklist` usa la **RX 6500 XT** (radeonsi). Sin esos flags, Chrome headless cae a SwiftShader, que es lo que invalidó los tiempos de la 4.1. El arnés aborta si detecta un renderer por software. El frame-rate va **sin vsync** (`--disable-gpu-vsync --disable-frame-rate-limit`).
+2. **Servidor realista.** Cuerpos precomprimidos con brotli-11 (o gzip-6 si el navegador no acepta br) y `Cache-Control: max-age`, como un hosting estático o un CDN. Chrome acepta br en `http://127.0.0.1`: el 88 % de las respuestas del piloto salieron en br; el resto son imágenes, donde comprimir no ahorra.
+3. **Estudio de carga**: 4 condiciones por configuración. Cada carga renderiza el primer frame de `?freeze=6.3`.
+
+   | condición | qué simula | cómo |
+   |---|---|---|
+   | **cold** | primera visita | proceso de navegador nuevo, caché HTTP vacía, caché de shaders de Mesa desactivada (`MESA_SHADER_CACHE_DISABLE`) |
+   | **warm** | visita repetida | recarga en la misma página (cachés HTTP, de shaders y de código calientes) |
+   | **fast4g** | red móvil | cold + preset «Fast 4G» de DevTools: 8,1 Mbps de bajada, 1,35 de subida y 165 ms de RTT (CDP `Network.emulateNetworkConditions`) |
+   | **cpu4x** | máquina lenta (sustituto parcial de Android) | cold + CPU 4× más lenta (CDP `Emulation.setCPUThrottlingRate`; ralentiza el hilo principal, no la GPU ni los workers) |
+
+4. **Estudio de runtime**: `?seconds=5` (1 s de calentamiento que se descarta y 4 s medidos) en dos resoluciones: **1080p** y **4K** (dpr 2, estrés de GPU). Se mide por frame:
+   - el intervalo entre frames;
+   - el tiempo de CPU de `update + render` (envío de comandos);
+   - el **tiempo de GPU** con `EXT_disjoint_timer_query_webgl2`, que empieza después de `update` para no contar la GPU ociosa.
+5. **VRAM real.** Contador **por proceso** del driver amdgpu (`drm-memory-vram` en `/proc/<pid>/fdinfo`) del proceso GPU de Chrome. Se toma la página cargada menos una página en blanco del mismo proceso, y el proceso se localiza por un switch marcador único en cada lanzamiento.
+   - **Descartado:** el contador global (`mem_info_vram_used`), porque el escritorio y otras apps lo mueven ±30 MB; dio deltas negativos en el piloto.
+   - El valor por proceso incluye los back buffers MSAA del canvas y el mapa de sombras, que son iguales en todas las configuraciones; **las diferencias entre configuraciones son las de los assets**.
+6. **30 repeticiones por celda**, con el orden de las celdas barajado en cada repetición (semilla 2026). Se reporta mediana e IQR; los intervalos de confianza por bootstrap y los gráficos quedan para la fase 6.
+7. **Máquina en reposo.** Antes de cada medición el arnés espera a que la carga media de 1 min baje de 3, y cada fila registra la carga (`load1`).
+   - Motivo: en el piloto había otro proyecto ejecutando PHPUnit con coverage (carga 6–10 sobre 8 hilos). Los tiempos de una misma celda variaban hasta 2×: real-glb·png en cold pasó de 857 a 1621 ms.
+
+### Hallazgos del piloto (no son resultados: 1–2 repeticiones)
+
+- **La escena es ligera para esta GPU.** A 1080p el GPU tarda unos 0,6 ms por frame (> 1000 fps), así que las diferencias entre formatos están por debajo del ruido. Por eso se añadió el 4K. Ahí aparece una señal: **los efectos procedurales (fbm) cuestan ~0,3 ms de GPU por frame** frente al flipbook (code 1,96 ms frente a files·webp 1,62 ms).
+- **VRAM real por página:** unos 250–262 MiB, casi todo back buffers. La diferencia entre atlas de 1024² (png, decompiled: 262 MiB) y sin atlas o reducidos (code, png128, uastc: 250–253 MiB) es de **~10–12 MiB**, coherente con la estimación de 12 MiB de la 4.2.
+- **En frío, la variante código tarda más en «assets listos»** (~310–350 ms frente a ~160–250 de files). La razón es que el canvas 2D de Chrome rasteriza en GPU (Skia) y, con la caché de shaders vacía, primero compila sus shaders. Generar texturas en canvas tiene un coste de primera visita que no aparecía con SwiftShader.
+
+Comando de la corrida completa: `pnpm bench:run` (30 repeticiones; unas 2 h con la máquina en reposo).
+
+### Estado al pausar (2026-11-23, 17:30)
+
+La corrida completa se detuvo a petición del usuario.
+
+- **Guardado:** 12 de 30 repeticiones del estudio de carga, en `bench/results/run/loads.csv` (576 filas; carga media de la máquina 2,8).
+- **Sin datos:** el estudio de runtime no llegó a correr, y faltan `meta.json` y `summary.md` porque se escriben al terminar.
+- **Para retomar:** `pnpm bench:run` empieza de cero. Si solo falta el runtime, `pnpm bench:run --study runtime`.
+
+Resultados preliminares de carga (mediana de 12; ms hasta el primer frame):
+
+| config | cold | warm | fast4g | cpu4x | VRAM real MiB |
+|---|---:|---:|---:|---:|---:|
+| code | 650 | 333 | **1098** | 898 | 261,7 |
+| hybrid·webp | 682 | **257** | 1695 | 774 | 221,6 |
+| files·webp | 679 | 266 | 1886 | **754** | 227,7 |
+| files·png | 670 | 275 | 4635 | 774 | 224,9 |
+| files·uastc | 705 | 405 | 3780 | 910 | 220,9 |
+| real·code | 780 | **189** | 1260 | 927 | 252,0 |
+| real·glb 128 px | 780 | 203 | 1266 | 929 | 250,0 |
+| real·glb original | 766 | 223 | 1272 | 951 | 262,2 |
+
+Lecturas preliminares, a confirmar con las 30 repeticiones:
+
+1. **Cruce entre red y CPU.** El código gana con la red lenta (−35 % frente a WebP), pero pierde con la CPU lenta (+16–19 %) y en visitas repetidas (+25–30 %), porque regenera todo en cada carga.
+2. **Con el arte real, las entregas empatan.** La diferencia es de ≤ 30 ms, salvo KTX2.
+3. **VRAM real.** La variante código ocupa **~35 MiB más** que las de archivos. Hipótesis: los canvas 2D acelerados que generan las texturas siguen ocupando la GPU además de la textura subida. La estimación de la 4.1 no lo podía ver. Verificarlo liberando los canvas tras la subida.
+
+Informe visual publicado como artifact privado: https://claude.ai/artifact/Bx2PZVdc9baQE8QR4kTnUo
+
+### 2026-11-24 · Hallazgo: el canvas 2D acelerado por GPU encarecía la variante código (`bench/results/exp-canvas/`)
+
+**Pregunta.** En la medición parcial, la variante código ocupaba unos 35 MiB más de VRAM real que las de archivos, algo que la estimación de la 4.1 no predecía.
+
+**Hipótesis 1 (rechazada): los canvas siguen reservados en la GPU.**
+- Experimento: vaciar los canvas generadores (`width = height = 0`) después de subir las texturas.
+- Resultado: la VRAM no cambia (261,7 MiB con y sin vaciar; 5 cargas por condición).
+
+**Hipótesis 2 (confirmada): el costo es el contexto 2D acelerado en sí.** Chrome crea un contexto de raster en GPU (Skia, con sus cachés) para el canvas 2D, y nuestros generadores además leen el canvas de vuelta con `getImageData`. Las variantes de archivos del estudio controlado nunca usan canvas 2D, así que no pagan ese costo.
+
+Experimento: el mismo código, pero con `getContext('2d', { willReadFrequently: true })`. Es la pista que Chrome recomienda cuando se usa `getImageData`, y hace que el canvas se dibuje por software. Se midieron 3 cargas por condición en GPU real. La prueba se hizo con un parche temporal en la página, equivalente al cambio que hoy está en los modelos:
+
+| config | VRAM real (cold) | primer frame cold | assets listos cold | primer frame fast4g | primer frame cpu4x |
+|---|---:|---:|---:|---:|---:|
+| code (canvas en GPU) | 261,7 MiB | 693 ms | 302 ms | 1173 ms | 969 ms |
+| code + canvas por software | **232,7 MiB** | **553 ms** | **189 ms** | **1002 ms** | **864 ms** |
+| real-code (canvas en GPU) | 252,0 MiB | 819 ms | 317 ms | 1353 ms | 1002 ms |
+| real-code + canvas por software | **220,4 MiB** | **691 ms** | **197 ms** | **1198 ms** | **930 ms** |
+| files·webp (sin canvas) | 227,7 MiB | 716 ms | 187 ms | 1947 ms | 792 ms |
+
+**Decisión (regla 2, mismas buenas prácticas).**
+- Los generadores de texturas de la variante código (`arena`, `crate`, `drone`, `barrel`) pasan a usar `willReadFrequently: true`. Se dibujan una vez y se suben una vez, así que un canvas en GPU solo añade su arranque, su memoria y una lectura de vuelta costosa.
+- El horneado de los GLB usa el mismo código, así que A, B y C siguen saliendo de la misma fuente.
+- Se repiten los gates y las comparaciones estáticas antes de la corrida completa. Los datos parciales de carga del 23-nov (12 repeticiones, canvas en GPU) quedan **invalidados** para la variante código y para todo el estudio real, porque su arena es código.
+
+**Para el artículo:** generar texturas con canvas 2D cuesta 30 MiB de VRAM y 140 ms en la primera visita **si se usa el canvas acelerado por GPU**, que es el comportamiento por defecto. Con la pista correcta, la variante código queda al nivel de los archivos en VRAM (233 frente a 228 MiB) y es la más rápida en frío. Es un ejemplo de cómo un detalle de implementación puede invertir una conclusión sobre el formato.
+
+### 2026-11-24 · Resultados de la corrida completa (`pnpm bench:run` → `bench/results/run/`)
+
+**Corrida.** 2026-11-24, de 09:36 a 13:04 (CST), con el canvas por software ya aplicado.
+- Gates repetidos antes de medir, sin cambios: controlado → 7 admitidas (etc1s sigue excluido); real → 5 admitidas.
+- 30 repeticiones × 12 configuraciones: 1440 cargas (4 condiciones) y 720 corridas de runtime (1080p y 4K).
+- El arnés esperó 1 h 42 min en total a que la máquina bajara de carga 3 (había un navegador del usuario abierto). La carga media al medir fue de 2,8 (máximo 4,9).
+- Chrome 158.0.8127.36 sobre ANGLE/OpenGL, AMD RX 6500 XT (radeonsi navi24, LLVM 20.1.2). Semilla 2026.
+- Archivos: `loads.csv`, `runtime.csv`, `meta.json`, `summary.md` y `raw/runtime.jsonl` (este último queda fuera de git).
+
+Todas las cifras son **mediana (de 30)**; el IQR está en `summary.md`. Los intervalos de confianza por bootstrap quedan para la fase 6.
+
+#### Resultado 1 — Carga, estudio controlado (ms hasta el primer frame)
+
+| config | cold | warm | fast4g | cpu4x | transfer KB | VRAM real MiB |
+|---|---:|---:|---:|---:|---:|---:|
+| **code** | **528** | 302 | **989** | 823 | **160** | 232,7 |
+| hybrid·png | 684 | 266 | 3994 | 761 | 3011 | 223,7 |
+| hybrid·webp | 682 | **261** | 1710 | **756** | 736 | 223,7 |
+| hybrid·uastc | 694 | 409 | 3489 | 894 | 2311 | 220,9 |
+| files·png | 678 | 266 | 4630 | 775 | 3632 | 227,7 |
+| files·webp | 697 | 261 | 1887 | 761 | 921 | 227,7 |
+| files·uastc | 703 | 399 | 3769 | 909 | 2598 | **220,9** |
+
+Lectura:
+1. **Primera visita: gana el código.** Es un 22 % más rápido que la mejor entrega de archivos (528 frente a 678 ms). Con red 4G el margen crece: −42 % frente a hybrid·webp y −79 % frente a files·png. Descarga 160 KB, frente a 736–3632 KB.
+2. **Visita repetida y CPU lenta: gana el archivo.**
+   - En caliente, el código tarda +16 % frente a webp (302 frente a 261 ms), porque regenera todo en cada carga y los archivos salen de caché.
+   - Con la CPU 4× más lenta tarda +9 % (823 frente a 756 ms).
+   - Es el mismo cruce del piloto, pero más pequeño tras el arreglo del canvas: antes era +25–30 % y +16–19 %.
+3. **KTX2 (UASTC) es la entrega más lenta en todo salvo en la red sin límite.**
+   - Transcodificar en WASM añade unos 200 ms a «assets listos» (389 frente a 176–187 ms en cold) y unos 140 ms en caliente.
+   - Además, los archivos UASTC con zstd pesan 3× más que WebP.
+   - A cambio ahorra solo **7 MiB** de VRAM frente a PNG/WebP (220,9 frente a 227,7).
+4. **La VRAM casi no distingue las vías.** El rango va de 220,9 a 232,7 MiB, casi todo back buffers.
+   - El código ocupa +5 MiB frente a files·png y +9 MiB frente a hybrid·png. hybrid·png tiene las mismas texturas de modelos y los mismos efectos, así que esos 9 MiB son de cómo se crean las texturas (canvas por software → `texImage2D`) y no del contenido.
+   - **Pregunta abierta:** de dónde salen esos 9 MiB. La estimación de la 4.1 da las mismas texturas (9,50 MB) en ambas.
+   - hybrid ocupa 4 MiB menos que files porque sus efectos son shaders y no texturas (flipbook + sprite = 4,0 MB estimados): coincide.
+
+#### Resultado 2 — Carga, estudio real (ms hasta el primer frame)
+
+| config | cold | warm | fast4g | cpu4x | transfer KB | VRAM real MiB |
+|---|---:|---:|---:|---:|---:|---:|
+| real·glb·png (original) | **658** | 220 | 1160 | 881 | 249 | 232,8 |
+| real·glb·png128 | 662 | 199 | 1156 | 860 | 207 | **218,4** |
+| real·glb·uastc | 679 | 343 | 2023 | 948 | 683 | 223,8 |
+| real·decompiled | 684 | 212 | 1282 | 948 | 251 | 230,7 |
+| **real·code** | 674 | **192** | **1146** | **856** | **181** | 220,4 |
+
+Lectura:
+1. **Con arte real de buena factura (low-poly, atlas de paleta), las vías empatan.** En cold, fast4g y cpu4x, las diferencias entre code, png y png128 son ≤ 25 ms (≤ 3 %).
+2. La imitación en código es la más rápida en caliente (−13 % frente al original). Sus props no tienen texturas (colores por vértice), así que regenerarlos cuesta poco.
+3. **El ahorro de VRAM viene de reducir el atlas, no de pasar a código.** png128 (218,4 MiB) ≈ code (220,4) < uastc (223,8) < png original (232,8).
+4. `decompiled` (geometría como datos JS) no aporta nada en runtime: pesa igual que el GLB y es más lento con la CPU limitada (948 frente a 881 ms).
+
+**Contraste entre los dos estudios.** En caliente, el código pierde en el controlado (+16 %) y gana en el real (−13 %).
+- Lo que lo explica es el tipo de generación: el controlado genera **texturas píxel a píxel**, y solo la arena cuesta 47 ms (grano por píxel). El real solo genera geometría con colores por vértice: 2–5 ms por prop.
+- **El costo del código está en las texturas procedurales, no en la geometría procedural.**
+
+#### Resultado 3 — Runtime sin vsync (GPU ms por frame, p50; fps)
+
+| config | 1080p GPU | 1080p fps | 4K GPU | 4K fps | frame p99 1080p |
+|---|---:|---:|---:|---:|---:|
+| **code** | 0,686 | 1207 | 2,029 | 388 | 10,1 |
+| hybrid·png / webp / uastc | 0,637 / 0,638 / 0,639 | ~1290 | 1,811 / 1,809 / 1,811 | 424 | 8,6–8,8 |
+| files·png / webp / uastc | 0,597 / 0,597 / 0,594 | ~1370 | 1,653 / 1,653 / 1,661 | 452 | 6,7–7,2 |
+| real·glb·png / png128 / uastc | 0,582 / 0,590 / 0,582 | ~1400 | 1,940 / 1,970 / 1,948 | ~403 | 6,4–6,6 |
+| real·decompiled | 0,593 | 1372 | 1,977 | 402 | 6,8 |
+| real·code | 0,625 | 1318 | 2,035 | 389 | 7,7 |
+
+En todas las configuraciones, el tiempo de CPU por frame (update + envío de comandos) es de 0,2–0,4 ms: la CPU no distingue variantes en runtime. Cada corrida tiene ~3100 muestras de GPU.
+
+Lectura:
+1. **El formato de textura no cambia el costo por frame.** png, webp y uastc (BC7) quedan a ≤ 0,5 % entre sí. La escena no está limitada por el ancho de banda de texturas, así que KTX2 solo ahorra VRAM.
+2. **Los efectos procedurales en shader cuestan GPU.** files frente a hybrid es la comparación limpia: solo cambian los efectos (flipbook frente a fbm en shader). Cuestan +0,04 ms a 1080p y +0,16 ms a 4K (+7 % / +10 %), y el costo **escala con los píxeles**, como predice la literatura sobre SDF y raymarching.
+3. **Los modelos generados en código cuestan +7–12 % de GPU frente a los mismos modelos en GLB** (code frente a hybrid: 0,686 frente a 0,638 ms a 1080p y 2,029 frente a 1,811 ms a 4K).
+   - Tienen los mismos triángulos (815 852), draw calls (80) y programas (11), y también escala con los píxeles.
+   - **No está explicado.** Hipótesis a probar:
+     - (a) el orden de triángulos: el GLB pasa por meshopt (`reorder`), lo que cambia el overdraw dentro de cada malla;
+     - (b) el estado de las texturas: CanvasTexture usa `flipY` y wrap clamp, mientras que el sampler glTF usa wrap repeat;
+     - (c) la cuantización de atributos del GLB.
+   - `real·decompiled` (misma textura que el GLB, geometría sin meshopt) también es un 2 % más lento que `real·glb·png`, lo que apunta a (a) o (c).
+   - Para separarlas habría que hacer un experimento de intercambio: geometría del GLB con texturas de canvas, y al revés.
+4. **Para el artículo:** en runtime, **cuanto más se hornea, menos GPU cuesta el frame**: files < hybrid < code, con −18 % de files frente a code a 4K.
+   - Es la cara opuesta de la carga, donde el código gana la primera visita.
+   - Con esta escena y esta GPU, las diferencias son de décimas de ms (todas las variantes superan los 380 fps en 4K). En una GPU móvil, el mismo porcentaje sí importaría: hay que medirlo en Android.
+
+#### Amenazas a la validez (corrida completa)
+
+- **Máquina no dedicada.**
+  - Había un navegador del usuario abierto (unos 45–60 % de CPU), y el arnés esperó 1 h 42 min en total.
+  - La correlación de rangos entre el tiempo de carga y `load1` dentro de cada celda es débil (mediana 0,19; rango −0,31 a 0,53).
+  - El orden barajado reparte ese ruido entre las celdas, pero infla los IQR. En la fase 6 se puede usar `load1` como covariable.
+- **La VRAM de la tabla de runtime no es interpretable** (deltas de −350 a +380 MiB en la misma celda).
+  - Ahí el navegador se reutiliza entre corridas, así que la línea base «antes» atrapa memoria de la página anterior a medio liberar.
+  - **La VRAM válida es la del estudio de carga**, con un navegador nuevo por celda e IQR de ≤ 3 MiB.
+  - Si hiciera falta la VRAM a 4K, habría que repetir con un navegador por corrida.
+- **Escena ligera para esta GPU.** Las diferencias de runtime son reales (IQR que no se solapan), pero pequeñas en términos absolutos.
+- **cpu4x no ralentiza la GPU, los workers ni la transcodificación WASM** fuera del hilo principal, así que no sustituye a un teléfono.
+- **Diferencias sin explicar:** el costo de GPU de los modelos en código (+7–12 %) y la VRAM extra de las texturas de canvas (+9 MiB). Quedan reportadas como observaciones, no como efectos del formato, hasta aislarlas.
+
+#### Conclusión de la fase 5 (PC)
+
+| pregunta | gana | margen |
+|---|---|---|
+| primera visita, red rápida | **código** | −22 % frente a los archivos |
+| primera visita, red 4G | **código** | −42 % frente a WebP; −79 % frente a PNG |
+| visita repetida | archivos (hybrid·webp ≈ files·webp) | el código tarda +16 % (controlado); con arte real gana el código (−13 %) |
+| CPU lenta | archivos (hybrid·webp ≈ files·webp) | +9 % para el código |
+| VRAM | KTX2 / atlas reducido | apenas 7–14 MiB de diferencia en ~225 |
+| costo por frame de GPU | **archivos** | files < hybrid (+7–10 %) < code (+15–23 %) |
+| bytes | **código** | 160 KB frente a 736–3632 KB |
+
+Ninguna vía gana en todo. **Código como fuente + archivos como runtime** sigue siendo la recomendación de trabajo, con un matiz:
+- en la web, el código como **entrega** gana la primera visita;
+- hornear gana el frame y la segunda visita;
+- el híbrido (webp) empata con files en la visita repetida (261 ms) y gana por poco con la CPU lenta (756 frente a 761 ms); en el costo por frame queda entre los dos extremos.
