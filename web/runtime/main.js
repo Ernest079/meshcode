@@ -9,7 +9,7 @@ import { decompile } from '../../src/core/decompile.js';
 import { toGodot, toUnity } from '../../src/core/engines.js';
 import { materialDiff, silhouetteIoU } from '../../src/core/fidelity.js';
 import { exportGLB, loadGLB, runSource, sceneStats } from '../../src/core/glb.js';
-import { coverage, encodeImage, renderImage } from '../../src/core/image.js';
+import { coverage, encodeImage, loadImageSource } from '../../src/core/image.js';
 import { imageView, renderViews } from '../../src/core/views.js';
 
 /** @param {Record<string, unknown>} msg @param {Transferable[]} [transfer] */
@@ -73,48 +73,176 @@ const view2d = document.createElement('canvas');
 view2d.style.display = 'none'; // inline display, not [hidden]: an inline display would override [hidden]
 view2d.title = 'Click: animation ⇄ whole sheet';
 document.body.append(view2d);
+const liveCanvas = document.createElement('canvas'); // reused offscreen buffer for live vector/pixel frames
+/** @type {import('../../src/core/image.js').LoadedImageSource | null} */
+let source2d = null;
 /** @type {import('../../src/core/image.js').RenderedImage | null} */
-let image2d = null;
-let mode = '3d', frameIdx = 0, sheetView = false, timer = 0;
+let baked2d = null;
+/** @type {string | null} */
+let clip2d = null;
+/** @type {'auto' | 'smooth' | 'crisp'} */
+let smoothMode = 'auto';
+let mode = '3d', sheetView = false, playing2d = true;
+let raf2d = 0, runGen2d = 0, startTime2d = 0, elapsed2d = 0, rendering2d = false;
+let viewW = 0, viewH = 0, viewDpr = 1;
 
-function draw2d() {
-  if (!image2d) return;
+function sizeView2d() {
   const W = innerWidth, H = innerHeight, dpr = Math.min(devicePixelRatio, 2);
+  if (W === viewW && H === viewH && dpr === viewDpr) return;
+  viewW = W;
+  viewH = H;
+  viewDpr = dpr;
   view2d.width = W * dpr;
   view2d.height = H * dpr;
+}
+
+/** @param {number} scale */
+function resolveSmooth(scale) {
+  if (smoothMode === 'smooth') return true;
+  if (smoothMode === 'crisp') return false;
+  return scale < 2;
+}
+
+/** @param {HTMLCanvasElement} img @param {number} logicalW @param {number} logicalH */
+function blit2d(img, logicalW, logicalH) {
+  sizeView2d();
+  const W = viewW, H = viewH, dpr = viewDpr;
   const ctx = /** @type {CanvasRenderingContext2D} */ (view2d.getContext('2d'));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = dark ? '#111318' : '#f2f3f5';
   ctx.fillRect(0, 0, W, H);
-  const { canvas: sheet, width, height, columns } = image2d;
-  const [sw, sh] = sheetView ? [sheet.width, sheet.height] : [width, height];
-  const [sx, sy] = sheetView ? [0, 0] : [(frameIdx % columns) * width, Math.floor(frameIdx / columns) * height];
-  let scale = Math.min((W - 32) / sw, (H - 32) / sh);
-  if (scale >= 2) scale = Math.floor(scale); // whole-number zoom keeps pixel art crisp
-  const dw = sw * scale, dh = sh * scale, x = (W - dw) / 2, y = (H - dh) / 2;
+  let scale = Math.min((W - 32) / logicalW, (H - 32) / logicalH);
+  const useSmooth = resolveSmooth(scale);
+  if (!useSmooth && scale >= 2) scale = Math.floor(scale); // whole-number zoom keeps pixel art crisp
+  const dw = logicalW * scale, dh = logicalH * scale, x = (W - dw) / 2, y = (H - dh) / 2;
   for (let cy = 0; cy < dh; cy += 10) { // checkerboard shows transparency
     for (let cx = 0; cx < dw; cx += 10) {
       ctx.fillStyle = ((cx + cy) / 10) % 2 ? (dark ? '#2a2d35' : '#d9dbe0') : (dark ? '#1e2027' : '#ffffff');
       ctx.fillRect(x + cx, y + cy, Math.min(10, dw - cx), Math.min(10, dh - cy));
     }
   }
-  ctx.imageSmoothingEnabled = scale < 2;
-  ctx.drawImage(sheet, sx, sy, sw, sh, x, y, dw, dh);
+  ctx.imageSmoothingEnabled = useSmooth;
+  if (useSmooth) ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, 0, 0, img.width, img.height, x, y, dw, dh);
 }
 
-function animate2d() {
-  clearInterval(timer);
-  if (!image2d || sheetView || image2d.frames < 2) return draw2d();
-  const { frames, fps } = image2d;
-  timer = window.setInterval(() => {
-    frameIdx = (frameIdx + 1) % frames;
-    draw2d();
-  }, 1000 / Math.max(1, fps));
-  draw2d();
+function stop2d() {
+  cancelAnimationFrame(raf2d);
+  raf2d = 0;
 }
+
+async function ensureBaked() {
+  if (!source2d) throw new Error('nothing to export yet');
+  if (!baked2d || baked2d.clip !== clip2d) baked2d = await source2d.bakeSheet(clip2d);
+  return baked2d;
+}
+
+/** @param {number | null} pngBytes */
+function sendStats2d(pngBytes) {
+  if (!source2d) return;
+  const spec = source2d.getClip(clip2d);
+  send({
+    type: 'stats2d',
+    kind: source2d.kind,
+    width: source2d.width,
+    height: source2d.height,
+    frames: spec.frames,
+    fps: spec.fps,
+    duration: spec.duration,
+    sheetWidth: spec.sheetWidth,
+    sheetHeight: spec.sheetHeight,
+    pngBytes,
+    clips: source2d.clipNames,
+    clip: spec.name,
+    smoothMode,
+    playing: playing2d,
+    sheetView,
+  });
+}
+
+function sendView2d() {
+  send({ type: 'view2d', smoothMode, playing: playing2d, sheetView });
+}
+
+/** Draw one live frame (or the whole sheet) at the current elapsed2d time. @param {number} gen */
+async function draw2d(gen = runGen2d) {
+  if (!source2d || gen !== runGen2d || rendering2d) return;
+  rendering2d = true;
+  try {
+    if (sheetView) {
+      const sheet = await ensureBaked();
+      if (gen !== runGen2d) return;
+      blit2d(sheet.canvas, sheet.canvas.width, sheet.canvas.height);
+      return;
+    }
+    if (source2d.kind !== 'canvas') {
+      const img = await ensureBaked();
+      if (gen !== runGen2d) return;
+      blit2d(img.canvas, img.width, img.height);
+      return;
+    }
+    const spec = source2d.getClip(clip2d);
+    const { width, height } = source2d;
+    sizeView2d();
+    const scale = Math.min((viewW - 32) / width, (viewH - 32) / height);
+    const oversample = smoothMode === 'smooth'
+      ? Math.min(4, Math.max(1, scale * viewDpr), 4096 / Math.max(width, height))
+      : 1;
+    const tw = Math.max(1, Math.round(width * oversample));
+    const th = Math.max(1, Math.round(height * oversample));
+    if (liveCanvas.width !== tw || liveCanvas.height !== th) {
+      liveCanvas.width = tw;
+      liveCanvas.height = th;
+    }
+    const lctx = /** @type {CanvasRenderingContext2D} */ (liveCanvas.getContext('2d'));
+    if (typeof lctx.reset === 'function') lctx.reset();
+    else { liveCanvas.width = tw; }
+    if (tw !== width || th !== height) lctx.setTransform(tw / width, 0, 0, th / height, 0, 0);
+    const t = spec.duration > 0
+      ? (spec.loop ? elapsed2d % spec.duration : Math.min(elapsed2d, spec.duration))
+      : 0;
+    await source2d.renderFrame(lctx, { clip: clip2d, t });
+    if (gen !== runGen2d) return;
+    blit2d(liveCanvas, width, height);
+  } catch (err) {
+    stop2d();
+    const e = /** @type {Error} */ (err);
+    send({ type: 'error', message: `${e.name}: ${e.message}` });
+  } finally {
+    rendering2d = false;
+  }
+}
+
+async function start2d() {
+  stop2d();
+  if (!source2d || mode !== '2d') return;
+  const gen = runGen2d;
+  const spec = source2d.getClip(clip2d);
+  await draw2d(gen);
+  if (gen !== runGen2d || sheetView || source2d.kind !== 'canvas' || (spec.frames < 2 && spec.duration <= 0) || !playing2d) return;
+  startTime2d = performance.now() - elapsed2d * 1000;
+  const tick = (/** @type {number} */ now) => {
+    if (gen !== runGen2d || mode !== '2d' || sheetView || !playing2d) return;
+    elapsed2d = (now - startTime2d) / 1000;
+    void draw2d(gen);
+    if (!spec.loop && spec.duration > 0 && elapsed2d >= spec.duration) {
+      elapsed2d = spec.duration;
+      playing2d = false;
+      sendView2d();
+      return;
+    }
+    raf2d = requestAnimationFrame(tick);
+  };
+  raf2d = requestAnimationFrame(tick);
+}
+
 view2d.addEventListener('click', () => {
+  if (!source2d) return;
+  const spec = source2d.getClip(clip2d);
+  if (spec.frames < 2) return;
   sheetView = !sheetView;
-  animate2d();
+  sendView2d();
+  void start2d();
 });
 
 /** Show the 3D viewport or the 2D preview; the 3D render loop only runs when visible. @param {string} next */
@@ -125,7 +253,7 @@ function setMode(next) {
   view2d.style.display = mode === '2d' ? 'block' : 'none';
   renderer.setAnimationLoop(mode === '3d' ? loop : null);
   highlight([]);
-  if (mode === '3d') clearInterval(timer);
+  if (mode === '3d') stop2d();
 }
 
 function resize() {
@@ -133,7 +261,7 @@ function resize() {
   renderer.setSize(w, h);
   camera.aspect = w / Math.max(h, 1);
   camera.updateProjectionMatrix();
-  draw2d();
+  if (mode === '2d') void draw2d();
 }
 addEventListener('resize', resize);
 resize();
@@ -249,14 +377,45 @@ renderer.setAnimationLoop(loop);
 /** Replies to a run carry its id (the AI loop waits for them) and whether the result is empty.
  * @param {string} code @param {number} [id] */
 async function run2d(code, id) {
+  stop2d();
+  const gen = ++runGen2d;
   try {
-    image2d = await renderImage(code);
-    frameIdx = 0;
-    animate2d();
-    const png = await encodeImage(image2d.canvas, 'image/png');
-    const { kind, width, height, frames, canvas } = image2d;
-    send({ type: 'stats2d', kind, width, height, frames, sheetWidth: canvas.width, sheetHeight: canvas.height, pngBytes: png.byteLength });
-    send({ type: 'ok', id, empty: coverage(canvas) === 0 });
+    const src = await loadImageSource(code);
+    if (gen !== runGen2d) return;
+    source2d = src;
+    baked2d = null;
+    clip2d = clip2d && src.clipNames.includes(clip2d) ? clip2d : src.defaultClip;
+    smoothMode = src.smooth === true ? 'smooth' : src.smooth === false ? 'crisp' : 'auto';
+    elapsed2d = 0;
+    playing2d = true;
+    const spec = src.getClip(clip2d);
+    if (spec.frames < 2) sheetView = false;
+
+    const smallSheet = spec.sheetWidth * spec.sheetHeight <= 1024 * 1024;
+    let empty = false;
+    /** @type {number | null} */ let pngBytes = null;
+    if (src.kind !== 'canvas' || smallSheet || sheetView) {
+      baked2d = await src.bakeSheet(clip2d);
+      if (gen !== runGen2d) return;
+      empty = coverage(baked2d.canvas) === 0;
+      pngBytes = (await encodeImage(baked2d.canvas, 'image/png')).byteLength;
+    } else {
+      liveCanvas.width = src.width;
+      liveCanvas.height = src.height;
+      const lctx = /** @type {CanvasRenderingContext2D} */ (liveCanvas.getContext('2d'));
+      await src.renderFrame(lctx, { clip: clip2d, frame: 0 });
+      empty = coverage(liveCanvas) === 0;
+      if (empty && spec.frames > 1) {
+        if (typeof lctx.reset === 'function') lctx.reset();
+        else liveCanvas.width = src.width;
+        await src.renderFrame(lctx, { clip: clip2d, frame: Math.floor(spec.frames / 2) });
+        empty = coverage(liveCanvas) === 0;
+      }
+    }
+    if (gen !== runGen2d) return;
+    sendStats2d(pngBytes);
+    await start2d();
+    send({ type: 'ok', id, empty });
   } catch (err) {
     const e = /** @type {Error} */ (err);
     send({ type: 'error', id, message: `${e.name}: ${e.message}` });
@@ -290,7 +449,38 @@ addEventListener('message', async (event) => {
     } else if (msg.type === 'theme') {
       dark = msg.dark;
       scene.background = new THREE.Color(dark ? 0x111318 : 0xf2f3f5);
-      draw2d();
+      if (mode === '2d') void draw2d();
+    } else if (msg.type === 'setClip') {
+      if (!source2d) return;
+      clip2d = msg.clip ?? source2d.defaultClip;
+      baked2d = null;
+      elapsed2d = 0;
+      playing2d = true;
+      const spec = source2d.getClip(clip2d);
+      if (spec.frames < 2) sheetView = false;
+      /** @type {number | null} */ let pngBytes = null;
+      if (spec.sheetWidth * spec.sheetHeight <= 1024 * 1024 || sheetView) {
+        baked2d = await source2d.bakeSheet(clip2d);
+        pngBytes = (await encodeImage(baked2d.canvas, 'image/png')).byteLength;
+      }
+      sendStats2d(pngBytes);
+      await start2d();
+    } else if (msg.type === 'setSmooth') {
+      smoothMode = msg.mode === 'smooth' || msg.mode === 'crisp' ? msg.mode : 'auto';
+      sendView2d();
+      if (mode === '2d') void draw2d();
+    } else if (msg.type === 'setPlaying') {
+      if (!source2d) return;
+      const spec = source2d.getClip(clip2d);
+      playing2d = !!msg.playing;
+      if (playing2d && !spec.loop && spec.duration > 0 && elapsed2d >= spec.duration) elapsed2d = 0;
+      sendView2d();
+      await start2d();
+    } else if (msg.type === 'setSheetView') {
+      if (!source2d) return;
+      sheetView = !!msg.sheet;
+      sendView2d();
+      await start2d();
     } else if (msg.type === 'export') {
       if (msg.format === 'glb') {
         if (!current) throw new Error('nothing to export yet');
@@ -302,18 +492,22 @@ addEventListener('message', async (event) => {
         const buffer = new TextEncoder().encode(out.code).buffer;
         send({ type: 'file', buffer, filename: out.filename, mime: 'text/plain', warnings: out.warnings }, [buffer]);
       } else {
-        if (!image2d) throw new Error('nothing to export yet');
+        const sheet = await ensureBaked();
         const mime = /** @type {const} */ ({ png: 'image/png', jpg: 'image/jpeg', webp: 'image/webp' })[/** @type {'png'} */ (msg.format)];
         if (!mime) throw new Error(`unknown format ${msg.format}`);
-        const buffer = await encodeImage(image2d.canvas, mime);
-        send({ type: 'file', buffer, filename: `${image2d.frames > 1 ? 'spritesheet' : 'image'}.${msg.format}`, mime }, [buffer]);
+        const buffer = await encodeImage(sheet.canvas, mime);
+        if (mime === 'image/png') sendStats2d(buffer.byteLength);
+        const base = sheet.clip && sheet.clips.length > 1
+          ? `${sheet.clip}-${sheet.frames > 1 ? 'spritesheet' : 'image'}`
+          : (sheet.frames > 1 ? 'spritesheet' : 'image');
+        send({ type: 'file', buffer, filename: `${base}.${msg.format}`, mime }, [buffer]);
       }
     } else if (msg.type === 'import') {
       imported = await loadGLB(msg.buffer);
       const r = await decompile(imported, { inlineTextures: true, source: msg.name });
       send({ type: 'decompiled', code: r.code, summary: r.summary, warnings: r.warnings });
     } else if (msg.type === 'capture') { // AI visual critique: snapshots of what is on screen
-      const target = mode === '2d' ? image2d?.canvas : current;
+      const target = mode === '2d' ? (await ensureBaked()).canvas : current;
       if (!target) throw new Error('nothing rendered yet');
       send({ type: 'captured', id: msg.id, images: mode === '2d' ? imageView(/** @type {HTMLCanvasElement} */ (target)) : renderViews(/** @type {THREE.Object3D} */ (target)) });
     } else if (msg.type === 'verify') { // AI refine: compare a candidate with the imported GLB, off screen
@@ -328,6 +522,13 @@ addEventListener('message', async (event) => {
 });
 
 // Handle for devtools and the end-to-end test.
-Object.assign(globalThis, { meshcodeViewer: { camera, current: () => current, highlighted: () => highlighted.map((o) => o.name) } });
+Object.assign(globalThis, {
+  meshcodeViewer: {
+    camera,
+    current: () => current,
+    highlighted: () => highlighted.map((o) => o.name),
+    view2d: () => ({ clip: clip2d, smoothMode, playing: playing2d, sheetView }),
+  },
+});
 
 send({ type: 'ready' });

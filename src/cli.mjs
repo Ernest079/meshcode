@@ -11,7 +11,7 @@ const USAGE = `meshcode — 3D models as code ↔ GLB
 
 Usage:
   meshcode build <model.js> [-o out.glb] [--meshopt]   run a three.js model module, write GLB
-  meshcode build <image.js|.svg|.html> -o out.png      2D: render code to PNG / JPG / WebP [--quality 0.92]
+  meshcode build <image.js|.svg|.html> -o out.png      2D: render code to PNG / JPG / WebP [--quality 0.92] [--clip name]
   meshcode inspect <file.glb>                          print meshes, triangles, bounding box
   meshcode decompile <file.glb> [-o out.js]            GLB → model module (+ textures), checks fidelity
   meshcode export <model.js|.glb> --to godot|unity [-o file]
@@ -70,6 +70,7 @@ async function main() {
       meshopt: { type: 'boolean', default: false },
       min: { type: 'string' },
       quality: { type: 'string' },
+      clip: { type: 'string' },
       to: { type: 'string' },
       '2d': { type: 'boolean', default: false },
       critique: { type: 'boolean', default: false },
@@ -88,10 +89,11 @@ async function main() {
     const out = values.out ?? input.replace(/\.[^.]+$/, '') + '.png';
     const type = IMAGE_TYPES[extname(out)];
     if (!type) throw new Error(`2D output must be .png, .jpg or .webp, got "${out}"`);
-    const { bytes, meta } = await buildImageFile(input, type, values.quality ? Number(values.quality) : undefined);
+    const { bytes, meta } = await buildImageFile(input, type, values.quality ? Number(values.quality) : undefined, values.clip);
     await writeFile(out, bytes);
+    const clipTag = meta.clip ? ` [${meta.clip}]` : '';
     const sheet = meta.frames > 1 ? ` × ${meta.frames} frames → sheet ${meta.sheetWidth}×${meta.sheetHeight}` : '';
-    console.log(`wrote ${out}  ${kb(bytes.length)}\n  ${meta.kind} ${meta.width}×${meta.height}${sheet}, ${(meta.coverage * 100).toFixed(1)}% non-transparent`);
+    console.log(`wrote ${out}  ${kb(bytes.length)}\n  ${meta.kind}${clipTag} ${meta.width}×${meta.height}${sheet}, ${(meta.coverage * 100).toFixed(1)}% non-transparent`);
   } else if (cmd === 'build') {
     const { glb, stats } = await buildFile(input);
     const final = values.meshopt ? await meshoptGLB(glb) : glb;

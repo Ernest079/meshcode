@@ -174,19 +174,20 @@ export async function decompileFile(glbPath, outPath) {
 
 /**
  * Render 2D source (canvas module, SVG or HTML) in Chrome and encode it.
- * @param {string} input source file @param {'image/png' | 'image/jpeg' | 'image/webp'} type @param {number} [quality]
+ * @param {string} input source file @param {'image/png' | 'image/jpeg' | 'image/webp'} type @param {number} [quality] @param {string} [clip]
  */
-export async function buildImageFile(input, type, quality = 0.92) {
+export async function buildImageFile(input, type, quality = 0.92, clip = undefined) {
   const code = await readFile(input, 'utf8');
-  const r = await withPage({}, (page) => page.evaluate(async ({ code, type, quality }) => {
+  const r = await withPage({}, (page) => page.evaluate(async ({ code, type, quality, clip }) => {
     const img = await import('/meshcode/core/image.js');
-    const out = await img.renderImage(code);
+    const out = await img.renderImage(code, { clip });
     return {
       b64: globalThis.__toB64(await img.encodeImage(out.canvas, type, quality)),
       meta: { kind: out.kind, width: out.width, height: out.height, frames: out.frames, columns: out.columns,
+        fps: out.fps, duration: out.duration, clip: out.clip, clips: out.clips,
         sheetWidth: out.canvas.width, sheetHeight: out.canvas.height, coverage: img.coverage(out.canvas) },
     };
-  }, { code, type, quality }));
+  }, { code, type, quality, clip }));
   return { bytes: Buffer.from(r.b64, 'base64'), meta: r.meta };
 }
 

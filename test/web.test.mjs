@@ -147,6 +147,56 @@ test('2D mode: example renders, exports PNG at sheet size, SVG source exports as
   await p.close();
 });
 
+test('2D rigging: smooth flag, multi-clip selector, Crisp/Smooth toggle, and clip PNG export', async () => {
+  const p = await context.newPage();
+  const RIG = `export const size = [128, 128];
+export const smooth = true;
+export const clips = {
+  idle: { duration: 0.5, fps: 12, loop: true },
+  celebrate: { frames: 4, fps: 12, loop: false },
+};
+export default (ctx, { width, height, clip, u, ease, rig }) => {
+  const s = 1 + (clip === 'celebrate' ? 0.25 * ease.outBack(u) : 0.08 * Math.sin(u * Math.PI * 2));
+  rig.node(ctx, { x: width / 2, y: height / 2, squash: s }, () => {
+    ctx.fillStyle = clip === 'celebrate' ? '#f59e0b' : '#7c3aed';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 32, 32, 0, 0, Math.PI * 2);
+    ctx.fill();
+  });
+};
+`;
+  try {
+    await p.goto(server.url);
+    await p.click('#mode-2d');
+    await p.evaluate((src) => {
+      const ed = globalThis.meshcodeEditor;
+      ed.dispatch({ changes: { from: 0, to: ed.state.doc.length, insert: src } });
+    }, RIG);
+    await p.click('#run');
+    await p.waitForFunction(() => document.querySelector('[data-stat="frames"]')?.textContent === '6 → sheet 768×128', null, { timeout: 20000 });
+    assert.equal(await p.locator('#smooth-2d').textContent(), 'Smooth');
+    assert.equal(await p.locator('#clip-2d').isVisible(), true);
+    assert.equal(await p.locator('#clip-2d').inputValue(), 'idle');
+
+    // Toggle Smooth -> Crisp and back.
+    await p.click('#smooth-2d');
+    await p.waitForFunction(() => document.querySelector('#smooth-2d')?.textContent === 'Crisp');
+    await p.click('#smooth-2d');
+    await p.waitForFunction(() => document.querySelector('#smooth-2d')?.textContent === 'Smooth');
+
+    // Switch clip -> stats update and export uses the active clip's dimensions and filename.
+    await p.selectOption('#clip-2d', 'celebrate');
+    await p.waitForFunction(() => document.querySelector('[data-stat="frames"]')?.textContent === '4 → sheet 512×128', null, { timeout: 20000 });
+    await p.selectOption('#format', 'png');
+    const [dl] = await Promise.all([p.waitForEvent('download'), p.click('#export')]);
+    assert.equal(dl.suggestedFilename(), 'celebrate-spritesheet.png');
+    const bytes = await readFile(/** @type {string} */ (await dl.path()));
+    assert.deepEqual([bytes.readUInt32BE(16), bytes.readUInt32BE(20)], [512, 128]);
+  } finally {
+    await p.close();
+  }
+});
+
 test('3D export to Godot and Unity downloads engine source', async () => {
   const p = await context.newPage();
   await p.goto(server.url);

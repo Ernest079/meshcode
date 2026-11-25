@@ -43,6 +43,7 @@
             <option value="dungeon">Dungeon kit · modular pieces</option>
           </optgroup>
           <optgroup label="2D">
+            <option value="slime">Bouncy slime rig · vector clips</option>
             <option value="walk">Pixel walk cycle · sprite sheet</option>
             <option value="cobble">Cobblestones · seamless texture</option>
             <option value="parallax">Parallax layers · scrolling bg</option>
@@ -127,8 +128,15 @@
           class="shrink-0 touch-none bg-line hover:bg-brand-500 focus-visible:bg-brand-500 aria-[orientation=horizontal]:h-1.5 aria-[orientation=horizontal]:cursor-row-resize aria-[orientation=vertical]:w-1.5 aria-[orientation=vertical]:cursor-col-resize dark:bg-line-dark"
         ></div>
         <section class="flex min-h-0 min-w-0 flex-1 flex-col" aria-label="3D preview">
-          <div class="flex h-8 shrink-0 items-center border-b border-line bg-panel px-2 text-xs text-muted dark:border-line-dark dark:bg-panel-dark">
+          <div class="flex h-8 shrink-0 items-center gap-1.5 border-b border-line bg-panel px-2 text-xs text-muted dark:border-line-dark dark:bg-panel-dark">
             <span draggable="true" data-panel="preview" class="cursor-grab select-none" title="Drag onto a side to move the preview">⠿ Preview</span>
+            <div data-mode="2d" hidden class="ml-auto flex items-center gap-1.5">
+              <label class="sr-only" for="clip-2d">Animation clip</label>
+              <select id="clip-2d" hidden class="field py-0.5 text-xs" title="Active animation clip"></select>
+              <button id="play-2d" type="button" hidden class="btn px-2 py-0.5 text-xs" title="Play / Pause preview">Pause</button>
+              <button id="smooth-2d" type="button" class="btn px-2 py-0.5 text-xs" title="Preview filtering: Auto / Smooth (vector) / Crisp (pixel art)">Auto</button>
+              <button id="sheet-2d" type="button" hidden class="btn px-2 py-0.5 text-xs" title="Toggle animation / sprite sheet view">Sheet</button>
+            </div>
           </div>
           <div class="relative min-h-0 flex-1">
             <iframe id="viewer" title="3D preview" sandbox="allow-scripts" class="block size-full"></iframe>

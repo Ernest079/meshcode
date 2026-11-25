@@ -5,6 +5,7 @@ import { Compartment } from '@codemirror/state';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { basicSetup, EditorView } from 'codemirror';
 import walkCode from '../../examples/2d/adventurer-walk.js?raw';
+import slimeCode from '../../examples/2d/bouncy-slime-rig.js?raw';
 import cobbleCode from '../../examples/2d/cobblestone-texture.js?raw';
 import iconsCode from '../../examples/2d/item-icons.svg?raw';
 import parallaxCode from '../../examples/2d/parallax-layers.js?raw';
@@ -27,6 +28,7 @@ const EXAMPLES = {
   forest: { mode: '3d', code: forestCode },
   spaceship: { mode: '3d', code: spaceshipCode },
   dungeon: { mode: '3d', code: dungeonCode },
+  slime: { mode: '2d', code: slimeCode },
   walk: { mode: '2d', code: walkCode },
   cobble: { mode: '2d', code: cobbleCode },
   parallax: { mode: '2d', code: parallaxCode },
@@ -44,12 +46,20 @@ const FORMATS = {
 const $ = (/** @type {string} */ sel) => /** @type {HTMLElement} */ (document.querySelector(sel));
 const viewer = /** @type {HTMLIFrameElement} */ ($('#viewer'));
 const formatSelect = /** @type {HTMLSelectElement} */ ($('#format'));
+const clipSelect2d = /** @type {HTMLSelectElement} */ ($('#clip-2d'));
+const playBtn2d = /** @type {HTMLButtonElement} */ ($('#play-2d'));
+const smoothBtn2d = /** @type {HTMLButtonElement} */ ($('#smooth-2d'));
+const sheetBtn2d = /** @type {HTMLButtonElement} */ ($('#sheet-2d'));
 const errorBox = $('#error');
 const status = $('#status');
 const kb = (/** @type {number} */ n) => `${(n / 1024).toFixed(1)} KB`;
 /** @type {Mode} */
 let mode = '3d';
 let kind2d = ''; // last rendered 2D source kind: canvas | svg | html
+/** @type {'auto' | 'smooth' | 'crisp'} */
+let smooth2d = 'auto';
+let playing2d = true;
+let sheetView2d = false;
 let imported = false; // the frame holds an imported GLB (reference for AI refine)
 
 /** Storage is a convenience only: blocked storage (private mode) must never break the app. */
@@ -232,13 +242,27 @@ window.addEventListener('message', async (event) => {
       $('[data-stat="drawCalls"]').textContent = String(msg.drawCalls);
       $('[data-stat="glbKB"]').textContent = kb(msg.glbBytes);
       break;
-    case 'stats2d':
+    case 'stats2d': {
       kind2d = msg.kind;
       syncFormats();
       $('[data-stat="kind"]').textContent = msg.kind;
       $('[data-stat="size"]').textContent = `${msg.width}×${msg.height}`;
       $('[data-stat="frames"]').textContent = msg.frames > 1 ? `${msg.frames} → sheet ${msg.sheetWidth}×${msg.sheetHeight}` : '1';
-      $('[data-stat="pngKB"]').textContent = kb(msg.pngBytes);
+      $('[data-stat="pngKB"]').textContent = msg.pngBytes != null ? kb(msg.pngBytes) : '–';
+      const clips = /** @type {string[]} */ (msg.clips ?? []);
+      clipSelect2d.hidden = clips.length < 2;
+      if (clips.length >= 2) {
+        clipSelect2d.replaceChildren(...clips.map((c) => new Option(c, c)));
+        if (msg.clip) clipSelect2d.value = msg.clip;
+      }
+      const animated = msg.kind === 'canvas' && (msg.frames > 1 || msg.duration > 0);
+      playBtn2d.hidden = !animated;
+      sheetBtn2d.hidden = msg.frames < 2;
+      syncView2d(msg);
+      break;
+    }
+    case 'view2d':
+      syncView2d(msg);
       break;
     case 'file':
       download(msg.buffer, String(msg.filename), String(msg.mime));
@@ -312,6 +336,21 @@ async function importGLB(file) {
   const buffer = await file.arrayBuffer();
   post({ type: 'import', buffer, name: file.name ?? 'model.glb' }, [buffer]);
 }
+
+/** @param {{ smoothMode?: 'auto' | 'smooth' | 'crisp', playing?: boolean, sheetView?: boolean }} state */
+function syncView2d(state) {
+  if (state.smoothMode) smooth2d = state.smoothMode;
+  if (state.playing !== undefined) playing2d = state.playing;
+  if (state.sheetView !== undefined) sheetView2d = state.sheetView;
+  smoothBtn2d.textContent = { auto: 'Auto', smooth: 'Smooth', crisp: 'Crisp' }[smooth2d];
+  playBtn2d.textContent = playing2d ? 'Pause' : 'Play';
+  sheetBtn2d.textContent = sheetView2d ? 'Anim' : 'Sheet';
+}
+
+clipSelect2d.addEventListener('change', () => post({ type: 'setClip', clip: clipSelect2d.value }));
+playBtn2d.addEventListener('click', () => post({ type: 'setPlaying', playing: !playing2d }));
+smoothBtn2d.addEventListener('click', () => post({ type: 'setSmooth', mode: smooth2d === 'smooth' ? 'crisp' : 'smooth' }));
+sheetBtn2d.addEventListener('click', () => post({ type: 'setSheetView', sheet: !sheetView2d }));
 
 $('#run').addEventListener('click', run);
 $('#export').addEventListener('click', () => {
@@ -518,7 +557,7 @@ if ('launchQueue' in window) {
     for (const handle of params.files ?? []) importGLB(await handle.getFile());
   });
 }
-if (import.meta.env.PROD && 'serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+if (import.meta.env.PROD && 'serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
 
 // ------------------------------------------------------------------ initial state: share link > draft > example
 
