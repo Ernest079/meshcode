@@ -75,6 +75,19 @@ test('share link restores the exact code in a fresh page', async () => {
   await other.close();
 });
 
+test('share inside an embedding page (itch.io) shows the link to copy', async () => {
+  const host = await context.newPage();
+  await host.setContent(`<iframe src="${server.url}" style="width:1200px;height:800px"></iframe>`);
+  const app = host.frames()[1];
+  await app.waitForFunction(() => document.querySelector('[data-stat="triangles"]')?.textContent !== '–', null, { timeout: 20000 });
+  await app.click('#share');
+  // No clipboard-write permission in a cross-origin frame without allow="clipboard-write" → the dialog fallback.
+  await app.waitForFunction(() => /** @type {HTMLDialogElement} */ (document.querySelector('#share-dialog')).open);
+  const link = await app.locator('#share-url').inputValue();
+  assert.ok(link.startsWith(`${server.url.replace(/\/$/, '')}/#mode=3d&code=`), link);
+  await host.close();
+});
+
 test('user code is sandboxed: it cannot reach the app page', async () => {
   assert.deepEqual(pageErrors, [], 'no errors before the attack');
   await page.evaluate(() => {

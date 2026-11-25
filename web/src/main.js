@@ -527,14 +527,24 @@ async function decode(b64url) {
   return new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
 }
 
+// Embedded in another site (itch.io): the host does not pass its URL's #hash or ?query on to this frame, so a share
+// link must point at this frame's own URL, and the visible address bar is the host's, not ours.
+const embedded = window.top !== window;
 $('#share').addEventListener('click', async () => {
   const url = `${location.origin}${location.pathname}#mode=${mode}&code=${await encode(getCode())}`;
   history.replaceState(null, '', url);
   try {
     await navigator.clipboard.writeText(url);
-    status.textContent = 'link copied';
+    status.textContent = embedded ? 'link copied (it opens meshcode on its own page)' : 'link copied';
   } catch {
-    status.textContent = 'link in the address bar';
+    if (!embedded) {
+      status.textContent = 'link in the address bar';
+      return;
+    }
+    const input = /** @type {HTMLInputElement} */ ($('#share-url'));
+    input.value = url;
+    /** @type {HTMLDialogElement} */ ($('#share-dialog')).showModal();
+    input.select();
   }
 });
 

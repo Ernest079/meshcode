@@ -192,7 +192,7 @@
         <label class="inline-flex items-start gap-2">
           <input id="ai-remember" type="checkbox" class="mt-0.5 accent-brand-500" />
           <span>Remember the key on this device
-            <span class="block text-xs text-muted">Off: it lives in this tab only. On: it is saved in this browser's storage, readable by any page on this origin (on github.io, every project of the same account).</span>
+            <span class="block text-xs text-muted">Off: it lives in this tab only. On: it is saved in this browser's storage, readable by any page on this origin. On a shared host (itch.io serves browser games from a shared domain) that can include other people's pages: leave it off there.</span>
           </span>
         </label>
         <label class="grid grid-cols-1 gap-1">Model
@@ -207,6 +207,17 @@
           Small local models write weaker 3D code than large ones.
         </p>
         <p id="ai-settings-status" class="text-xs text-muted" aria-live="polite"></p>
+        <div class="flex justify-end"><button class="btn btn-primary" value="done">Done</button></div>
+      </form>
+    </dialog>
+    <!-- Embedded (itch.io): the clipboard may be blocked and the address bar belongs to the host page. -->
+    <dialog id="share-dialog" aria-labelledby="share-title" class="m-auto w-[calc(100%-2rem)] max-w-md rounded-lg border border-line bg-panel text-ink shadow-xl backdrop:bg-black/50 dark:border-line-dark dark:bg-panel-dark dark:text-ink-dark">
+      <form method="dialog" class="grid grid-cols-1 gap-3 p-4 text-sm">
+        <h2 id="share-title" class="text-base font-semibold">Share link</h2>
+        <label class="grid grid-cols-1 gap-1">Copy this link (Ctrl+C)
+          <input id="share-url" class="field font-mono text-xs" readonly />
+        </label>
+        <p class="text-xs text-muted">It opens meshcode on its own page, with this code. A link to the page that embeds meshcode (like itch.io) cannot carry the code.</p>
         <div class="flex justify-end"><button class="btn btn-primary" value="done">Done</button></div>
       </form>
     </dialog>
