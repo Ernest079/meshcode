@@ -1,6 +1,6 @@
 node_modules/
 dist/
-meshcode-web.zip
+*.zip
 .venv/
 *.log
 .DS_Store

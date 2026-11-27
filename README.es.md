@@ -4,7 +4,7 @@
 
 Escribe modelos 3D e imágenes 2D como código, míralos en vivo y expórtalos como GLB, PNG o código de motor. O convierte un GLB de vuelta en código.
 
-**▶ Pruébalo en itch.io: [meshcode](ITCH_IO_URL)** <!-- reemplaza ITCH_IO_URL por el enlace de la página de itch.io -->
+**▶ Pruébalo en itch.io: [meshcode](https://llwaitoll.itch.io/meshcode)**
 
 ![App meshcode: una antorcha de pared, un bosque procedural que se regenera al cambiar la semilla, una nave espacial y, en modo 2D, un ciclo de caminata en pixel art, íconos SVG y una UI de juego en HTML/CSS](docs/demo.gif)
 
@@ -55,7 +55,7 @@ meshcode es un editor donde un modelo 3D o una imagen 2D **es un archivo pequeñ
 
 ### Cómo se usa
 
-1. Abre la [página de itch.io](ITCH_IO_URL) y ejecuta la app en el navegador.
+1. Abre la [página de itch.io](https://llwaitoll.itch.io/meshcode) y ejecuta la app en el navegador.
 2. Elige **3D** o **2D** arriba. Abre **Examples…** para cargar un modelo o una imagen de ejemplo.
 3. Edita el código de la izquierda. La vista previa se actualiza mientras escribes (o pulsa **Run** / `Ctrl+Enter`). Los errores aparecen sobre la vista previa.
 4. En 3D, arrastra para orbitar, usa la rueda para acercar y haz clic en una pieza para saltar a su código.
@@ -79,7 +79,6 @@ Tu código se ejecuta en un iframe aislado (origen opaco), así que un enlace co
 ```sh
 pnpm dev       # http://localhost:5173
 pnpm build     # → dist/ (archivos estáticos; se instala como PWA, funciona sin conexión y abre archivos .glb)
-pnpm itch      # build + zip → meshcode-web.zip, listo para subir a itch.io como proyecto HTML
 ```
 
 ## Investigación: ¿archivos, híbrido o código?

@@ -14,7 +14,6 @@
     "build:runtime": "vite build -c web/vite.runtime.config.js --logLevel warn",
     "dev": "pnpm build:runtime && vite -c web/vite.config.js",
     "build": "pnpm build:runtime && vite build -c web/vite.config.js",
-    "itch": "pnpm build && rm -f meshcode-web.zip && cd dist && zip -qr ../meshcode-web.zip . && cd .. && echo \"meshcode-web.zip listo\"",
     "preview": "vite preview -c web/vite.config.js",
     "test": "node --test test/*.test.mjs",
     "demo:gif": "node scripts/demo-gif.mjs",
